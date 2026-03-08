@@ -21,6 +21,8 @@ function AppContent() {
         sx={{
           pb: isPlayerPage ? 0 : "120px",
           minHeight: isPlayerPage ? undefined : "100vh",
+          overscrollBehavior: isPlayerPage ? "none" : undefined,
+          overflow: isPlayerPage ? "hidden" : undefined,
         }}
       >
         {currentSong && (

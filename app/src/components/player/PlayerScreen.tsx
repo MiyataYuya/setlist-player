@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import Box from "@mui/material/Box";
 import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
@@ -19,6 +19,12 @@ export default function PlayerScreen() {
   const currentIndex = usePlayerStore((s) => s.currentIndex);
   const playSong = usePlayerStore((s) => s.playSong);
   const [tagManagerOpen, setTagManagerOpen] = useState(false);
+  const currentItemRef = useRef<HTMLDivElement>(null);
+
+  // 現在の曲が変わったらキュー内の現在曲位置にスクロール
+  useEffect(() => {
+    currentItemRef.current?.scrollIntoView({ block: "nearest" });
+  }, [currentIndex]);
 
   if (!currentSong) {
     return (
@@ -41,8 +47,6 @@ export default function PlayerScreen() {
     ? new Date(currentSong.publishedAt).toLocaleDateString("ja-JP")
     : "";
 
-  const upcomingQueue = queue.slice(currentIndex + 1);
-
   return (
     <Box
       sx={{
@@ -50,6 +54,7 @@ export default function PlayerScreen() {
         flexDirection: "column",
         height: "calc(100dvh - 56.25vw - 56px)",
         minHeight: 280,
+        overscrollBehavior: "none",
       }}
     >
       {/* 曲情報 */}
@@ -98,13 +103,13 @@ export default function PlayerScreen() {
         </Box>
       </Box>
 
-      {/* キュー（次の曲） */}
-      {upcomingQueue.length > 0 && (
+      {/* キュー */}
+      {queue.length > 0 && (
         <Box sx={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", mt: 1 }}>
           <Box sx={{ px: 3, display: "flex", alignItems: "center", gap: 0.5 }}>
             <QueueMusicIcon sx={{ fontSize: 18, color: "text.secondary" }} />
             <Typography variant="caption" color="text.secondary" fontWeight={600}>
-              次に再生 ({upcomingQueue.length})
+              キュー ({queue.length})
             </Typography>
           </Box>
           <List
@@ -113,44 +118,54 @@ export default function PlayerScreen() {
             sx={{
               flex: 1,
               overflowY: "auto",
+              overscrollBehavior: "contain",
               px: 1,
               "&::-webkit-scrollbar": { width: 0 },
             }}
           >
-            {upcomingQueue.map((song, i) => (
-              <ListItemButton
-                key={song.performanceId}
-                onClick={() => playSong(song, queue)}
-                sx={{
-                  borderRadius: 1,
-                  py: 0.5,
-                  px: 2,
-                  minHeight: 0,
-                }}
-              >
-                <Typography
-                  variant="caption"
-                  color="text.secondary"
-                  sx={{ width: 20, flexShrink: 0 }}
+            {queue.map((song, i) => {
+              const isCurrent = i === currentIndex;
+              const isPlayed = i < currentIndex;
+              return (
+                <ListItemButton
+                  key={`${song.performanceId}-${i}`}
+                  ref={isCurrent ? currentItemRef : undefined}
+                  onClick={() => playSong(song, queue)}
+                  sx={{
+                    borderRadius: 1,
+                    py: 0.5,
+                    px: 2,
+                    minHeight: 0,
+                    opacity: isPlayed ? 0.45 : 1,
+                    bgcolor: isCurrent ? "action.selected" : "transparent",
+                  }}
                 >
-                  {i + 1}
-                </Typography>
-                <ListItemText
-                  primary={song.title}
-                  secondary={song.artist}
-                  primaryTypographyProps={{
-                    variant: "body2",
-                    noWrap: true,
-                    lineHeight: 1.3,
-                  }}
-                  secondaryTypographyProps={{
-                    variant: "caption",
-                    noWrap: true,
-                  }}
-                  sx={{ my: 0 }}
-                />
-              </ListItemButton>
-            ))}
+                  <Typography
+                    variant="caption"
+                    color={isCurrent ? "primary" : "text.secondary"}
+                    sx={{ width: 20, flexShrink: 0 }}
+                  >
+                    {i + 1}
+                  </Typography>
+                  <ListItemText
+                    primary={song.title}
+                    secondary={song.artist}
+                    primaryTypographyProps={{
+                      variant: "body2",
+                      noWrap: true,
+                      lineHeight: 1.3,
+                      color: isCurrent ? "primary" : "text.primary",
+                      fontWeight: isCurrent ? 700 : 400,
+                    }}
+                    secondaryTypographyProps={{
+                      variant: "caption",
+                      noWrap: true,
+                    }}
+                    sx={{ my: 0 }}
+                  />
+                </ListItemButton>
+              );
+            })}
           </List>
         </Box>
       )}

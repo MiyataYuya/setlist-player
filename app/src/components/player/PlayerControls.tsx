@@ -19,16 +19,17 @@ export default function PlayerControls() {
   const toggleRepeat = usePlayerStore((s) => s.toggleRepeat);
 
   return (
-    <Stack direction="row" alignItems="center" justifyContent="center" gap={1}>
+    <Stack direction="row" alignItems="center" justifyContent="center" gap={2}>
       <IconButton
         onClick={toggleShuffle}
         color={isShuffle ? "primary" : "default"}
+        size="large"
       >
-        <ShuffleIcon />
+        <ShuffleIcon fontSize="medium" />
       </IconButton>
 
-      <IconButton onClick={playPrev}>
-        <SkipPreviousIcon />
+      <IconButton onClick={playPrev} size="large">
+        <SkipPreviousIcon sx={{ fontSize: 36 }} />
       </IconButton>
 
       <IconButton
@@ -37,26 +38,27 @@ export default function PlayerControls() {
           bgcolor: "primary.main",
           color: "black",
           "&:hover": { bgcolor: "primary.light" },
-          width: 56,
-          height: 56,
+          width: 64,
+          height: 64,
         }}
       >
         {isPlaying ? (
-          <PauseIcon fontSize="large" />
+          <PauseIcon sx={{ fontSize: 36 }} />
         ) : (
-          <PlayArrowIcon fontSize="large" />
+          <PlayArrowIcon sx={{ fontSize: 36 }} />
         )}
       </IconButton>
 
-      <IconButton onClick={playNext}>
-        <SkipNextIcon />
+      <IconButton onClick={playNext} size="large">
+        <SkipNextIcon sx={{ fontSize: 36 }} />
       </IconButton>
 
       <IconButton
         onClick={toggleRepeat}
         color={isRepeat ? "primary" : "default"}
+        size="large"
       >
-        <RepeatIcon />
+        <RepeatIcon fontSize="medium" />
       </IconButton>
     </Stack>
   );

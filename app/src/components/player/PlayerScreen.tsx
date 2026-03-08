@@ -29,29 +29,36 @@ export default function PlayerScreen() {
     : "";
 
   return (
-    <Box sx={{ display: "flex", flexDirection: "column", height: "100%" }}>
+    <Box
+      sx={{
+        display: "flex",
+        flexDirection: "column",
+        height: "100%",
+      }}
+    >
       {/* YouTubeEmbed は App.tsx で常時マウント */}
 
-      <Box sx={{ p: 2, flex: 1 }}>
+      {/* 曲情報 — 動画の下に余白を持たせて配置 */}
+      <Box sx={{ px: 3, pt: 4, flex: 1, display: "flex", flexDirection: "column" }}>
         <Box
           sx={{
             display: "flex",
             alignItems: "flex-start",
             justifyContent: "space-between",
-            mb: 2,
+            mb: 1,
           }}
         >
           <Box sx={{ minWidth: 0, flex: 1 }}>
-            <Typography variant="h6" noWrap>
+            <Typography variant="h5" fontWeight="bold" noWrap>
               {currentSong.title}
             </Typography>
             {currentSong.artist && (
-              <Typography variant="body2" color="text.secondary" noWrap>
+              <Typography variant="body1" color="text.secondary" noWrap sx={{ mt: 0.5 }}>
                 {currentSong.artist}
               </Typography>
             )}
             {date && (
-              <Typography variant="caption" color="text.secondary">
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
                 {date}
               </Typography>
             )}
@@ -59,7 +66,10 @@ export default function PlayerScreen() {
           <FavoriteButton performanceId={currentSong.performanceId} />
         </Box>
 
-        <PlayerControls />
+        {/* コントロール — 曲情報の下に余白を持たせて配置 */}
+        <Box sx={{ mt: 4 }}>
+          <PlayerControls />
+        </Box>
       </Box>
     </Box>
   );

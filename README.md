@@ -4,7 +4,7 @@ YouTubeの歌枠配信のコメント欄からセットリスト（セトリ）�
 
 視聴者が投稿したセトリコメントを情報源として活用し、曲名・タイムスタンプを構造化データに変換します。
 
-https://miyatayuya.github.io/setlist-player/
+**Webアプリ:** https://miyatayuya.github.io/setlist-player/
 
 ## データの取り扱いについて
 
@@ -29,6 +29,22 @@ https://miyatayuya.github.io/setlist-player/
 ### 保存するデータの範囲
 
 保存するのは曲名・アーティスト名・タイムスタンプ・動画IDなどの**メタデータのみ**です。配信の音声・映像・コメント本文はリポジトリに含まれません。
+
+### 歌唱パフォーマンス一覧
+
+全楽曲のパフォーマンスデータは [`data/song_performances.csv`](data/song_performances.csv) で公開しています。
+
+| カラム | 内容 |
+|--------|------|
+| `song_name` | 曲名 |
+| `artist` | アーティスト名 |
+| `video_id` | YouTube動画ID |
+| `video_url` | タイムスタンプ付きYouTubeリンク |
+| `published_at` | 配信日時 |
+| `start_time` | 歌唱開始時刻 (HH:MM:SS) |
+| `end_time` | 歌唱終了時刻 (HH:MM:SS) |
+
+CSVの `video_url` をクリックすれば、アプリを使わずに該当の歌唱箇所をYouTubeで直接視聴できます。
 
 ## 構成
 

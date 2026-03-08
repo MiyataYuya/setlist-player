@@ -17,6 +17,7 @@ app/test-results/
 # Local settings
 .claude/settings.local.json
 .playwright-mcp/
+CLAUDE.md
 
 # Intermediate data
 data/enrichment_log.json

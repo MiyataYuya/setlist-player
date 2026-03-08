@@ -30,9 +30,9 @@ YouTubeの歌枠配信のコメント欄からセットリスト（セトリ）�
 
 保存するのは曲名・アーティスト名・タイムスタンプ・動画IDなどの**メタデータのみ**です。配信の音声・映像・コメント本文はリポジトリに含まれません。
 
-### 歌唱パフォーマンス一覧
+### 楽曲一覧
 
-全楽曲のパフォーマンスデータは [`data/song_performances.csv`](data/song_performances.csv) で公開しています。
+全楽曲データは [`data/song_performances.csv`](data/song_performances.csv) で公開しています。
 
 | カラム | 内容 |
 |--------|------|

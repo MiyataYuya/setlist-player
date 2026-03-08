@@ -104,5 +104,6 @@ function csvDataPlugin(): Plugin {
 }
 
 export default defineConfig({
+  base: "/setlist-player/",
   plugins: [react(), csvDataPlugin()],
 });

@@ -10,9 +10,14 @@ import re
 from dataclasses import dataclass
 from typing import Optional
 
-INPUT_FILE = "setlists_raw.json"
-OUTPUT_SONGS = "songs.csv"
-OUTPUT_PERFORMANCES = "song_performances.csv"
+import os
+
+_DIR = os.path.dirname(os.path.abspath(__file__))
+_DATA_DIR = os.path.join(os.path.dirname(_DIR), "data")
+
+INPUT_FILE = os.path.join(_DIR, "setlists_raw.json")
+OUTPUT_SONGS = os.path.join(_DATA_DIR, "songs.csv")
+OUTPUT_PERFORMANCES = os.path.join(_DATA_DIR, "song_performances.csv")
 
 # -------- タイムスタンプ正規表現 --------
 _TIME_RE = re.compile(r"\b(\d{1,2}:)?\d{1,2}:\d{2}\b")

@@ -14,12 +14,13 @@ from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 
 
-PLAYLISTS_FILE = "playlists.txt"
+_DIR = os.path.dirname(os.path.abspath(__file__))
+PLAYLISTS_FILE = os.path.join(_DIR, "playlists.txt")
 API_KEY: str = os.environ.get("YOUTUBE_API_KEY")
 if not API_KEY:
     raise RuntimeError("YOUTUBE_API_KEY is not set")
 
-OUTPUT_FILE = "setlists_raw.json"
+OUTPUT_FILE = os.path.join(_DIR, "setlists_raw.json")
 
 
 def load_playlist_ids(filepath: str) -> list[str]:

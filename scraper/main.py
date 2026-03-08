@@ -10,6 +10,9 @@ from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 
 
+_DIR = os.path.dirname(os.path.abspath(__file__))
+_DATA_DIR = os.path.join(os.path.dirname(_DIR), "data")
+
 PLAYLIST_ID = "PLHFH8D2X0VLRqo9RT_kTi7FQl6Z_YyLGB"
 API_KEY : str = os.environ.get("YOUTUBE_API_KEY")
 if not API_KEY:
@@ -307,7 +310,7 @@ def main() -> None:
         raise
 
     # CSV出力: setlist_candidates.csv
-    out_path = "setlist_candidates.csv"
+    out_path = os.path.join(_DIR, "setlist_candidates.csv")
     with open(out_path, "w", newline="", encoding="utf-8") as f:
         w = csv.DictWriter(f, fieldnames=[
             "video_id", "video_url",
@@ -319,7 +322,7 @@ def main() -> None:
     print(f"written: {out_path} ({len(out_rows)} rows)")
 
     # CSV出力: song_performances.csv（曲×配信のマッピング）
-    perf_path = "song_performances.csv"
+    perf_path = os.path.join(_DATA_DIR, "song_performances.csv")
     with open(perf_path, "w", newline="", encoding="utf-8") as f:
         w = csv.DictWriter(f, fieldnames=[
             "song_name", "artist", "video_id", "video_url", "start_time", "end_time",
@@ -347,7 +350,7 @@ def main() -> None:
         if p.artist and not song_counts[key]["artist"]:
             song_counts[key]["artist"] = p.artist
 
-    songs_path = "songs.csv"
+    songs_path = os.path.join(_DATA_DIR, "songs.csv")
     with open(songs_path, "w", newline="", encoding="utf-8") as f:
         w = csv.DictWriter(f, fieldnames=["song_name", "artist", "play_count"])
         w.writeheader()

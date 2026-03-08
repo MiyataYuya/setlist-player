@@ -93,20 +93,47 @@ def iter_playlist_video_ids(youtube, playlist_id: str) -> Iterable[str]:
 
 def fetch_video_published_at(youtube, video_ids: list[str]) -> dict[str, Optional[str]]:
     """動画の公開日時を一括取得する（最大50件ずつ）"""
-    result: dict[str, Optional[str]] = {}
+    info = fetch_video_info(youtube, video_ids)
+    return {vid: v["published_at"] for vid, v in info.items()}
+
+
+def fetch_video_info(youtube, video_ids: list[str]) -> dict[str, dict]:
+    """動画の詳細情報を一括取得する（最大50件ずつ）
+
+    取得フィールド:
+    - snippet: title, publishedAt, description, channelTitle, tags
+    - contentDetails: duration
+    - statistics: viewCount, likeCount
+    """
+    result: dict[str, dict] = {}
     for i in range(0, len(video_ids), 50):
         batch = video_ids[i:i + 50]
         resp = youtube.videos().list(
-            part="snippet",
+            part="snippet,contentDetails,statistics",
             id=",".join(batch),
-            fields="items(id,snippet/publishedAt)",
         ).execute()
         for item in resp.get("items", []):
-            result[item["id"]] = item["snippet"]["publishedAt"]
+            snippet = item.get("snippet", {})
+            details = item.get("contentDetails", {})
+            stats = item.get("statistics", {})
+            result[item["id"]] = {
+                "published_at": snippet.get("publishedAt"),
+                "title": snippet.get("title"),
+                "description": snippet.get("description"),
+                "channel_title": snippet.get("channelTitle"),
+                "tags": snippet.get("tags", []),
+                "duration": details.get("duration"),
+                "view_count": stats.get("viewCount"),
+                "like_count": stats.get("likeCount"),
+            }
     # 取得できなかった動画はNone
     for vid in video_ids:
         if vid not in result:
-            result[vid] = None
+            result[vid] = {
+                "published_at": None, "title": None, "description": None,
+                "channel_title": None, "tags": [], "duration": None,
+                "view_count": None, "like_count": None,
+            }
     return result
 
 

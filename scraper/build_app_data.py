@@ -4,11 +4,13 @@
 - artist補完 (songs.csvから)
 - end_time自動補完 (次曲のstart_timeで代替)
 - song_id / performance_id 採番
+- YouTube APIで動画タイトルを取得
 - data/performances.csv, data/songs.csv, data/videos.csv を出力
 """
 from __future__ import annotations
 
 import csv
+import json
 import os
 from typing import Optional
 
@@ -90,12 +92,47 @@ def main() -> None:
                     if s["song_id"] == song_id_map[name] and not s["artist"]:
                         s["artist"] = row["artist"]
 
-    # 4. 動画マスタ生成
-    video_map: dict[str, str] = {}
+    # 4. 動画マスタ生成 (タイトルはYouTube APIまたはキャッシュから取得)
+    video_map: dict[str, dict[str, str]] = {}
     for row in raw_rows:
         vid = row["video_id"]
         if vid not in video_map:
-            video_map[vid] = row.get("published_at", "")
+            video_map[vid] = {
+                "published_at": row.get("published_at", ""),
+                "title": "",
+            }
+
+    # タイトルキャッシュ読み込み (既存のapp_videos.csvから)
+    VIDEO_FIELDS = ["title", "channel_title", "duration", "view_count", "like_count"]
+    if os.path.exists(OUTPUT_VIDEOS):
+        with open(OUTPUT_VIDEOS, "r", encoding="utf-8") as f:
+            for row in csv.DictReader(f):
+                vid = row["video_id"]
+                if vid in video_map and row.get("title"):
+                    for field in VIDEO_FIELDS:
+                        if row.get(field):
+                            video_map[vid][field] = row[field]
+
+    # 未取得タイトルをYouTube APIで取得
+    missing = [vid for vid, v in video_map.items() if not v.get("title")]
+    if missing:
+        api_key = os.environ.get("YOUTUBE_API_KEY", "")
+        if api_key:
+            try:
+                from fetch_setlists import fetch_video_info, youtube_client
+                youtube = youtube_client(api_key)
+                info = fetch_video_info(youtube, missing)
+                for vid, data in info.items():
+                    if vid in video_map:
+                        for field in VIDEO_FIELDS:
+                            val = data.get(field)
+                            if val is not None:
+                                video_map[vid][field] = str(val) if not isinstance(val, str) else val
+                print(f"Fetched {len(info)} video info from YouTube API")
+            except Exception as e:
+                print(f"Warning: Could not fetch video info: {e}")
+        else:
+            print(f"Warning: YOUTUBE_API_KEY not set, {len(missing)} videos without title")
 
     # 5. end_time自動補完
     # 同一動画内でstart_seconds順にソートし、次曲のstartをendとする
@@ -147,10 +184,15 @@ def main() -> None:
         w.writerows(performances)
 
     with open(OUTPUT_VIDEOS, "w", newline="", encoding="utf-8") as f:
-        w = csv.DictWriter(f, fieldnames=["video_id", "published_at"])
+        fieldnames = ["video_id", "published_at", "title", "channel_title",
+                       "duration", "view_count", "like_count"]
+        w = csv.DictWriter(f, fieldnames=fieldnames)
         w.writeheader()
-        for vid, pub in video_map.items():
-            w.writerow({"video_id": vid, "published_at": pub})
+        for vid, data in video_map.items():
+            row = {"video_id": vid}
+            for field in fieldnames[1:]:
+                row[field] = data.get(field, "")
+            w.writerow(row)
 
     # サマリー
     print(f"Songs:        {len(song_master)} unique songs -> {OUTPUT_SONGS}")

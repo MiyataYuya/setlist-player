@@ -12,3 +12,12 @@ wheels/
 # App build artifacts
 app/node_modules/
 app/dist/
+app/test-results/
+
+# Local settings
+.claude/settings.local.json
+.playwright-mcp/
+
+# Intermediate data
+data/app_songs_enriched.csv
+data/enrichment_log.json

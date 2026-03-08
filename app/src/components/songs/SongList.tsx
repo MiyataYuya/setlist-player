@@ -7,9 +7,10 @@ import type { SongPerformance } from "../../data/types";
 
 interface Props {
   songs: SongPerformance[];
+  nested?: boolean;
 }
 
-export default function SongList({ songs }: Props) {
+export default function SongList({ songs, nested }: Props) {
   const { visibleItems, hasMore, sentinelRef } = useInfiniteScroll(songs);
 
   if (songs.length === 0) {
@@ -20,14 +21,16 @@ export default function SongList({ songs }: Props) {
     );
   }
 
+  const items = nested ? songs : visibleItems;
+
   return (
     <>
-      <List disablePadding>
-        {visibleItems.map((song) => (
+      <List disablePadding sx={nested ? { pl: 2, bgcolor: "action.hover" } : undefined}>
+        {items.map((song) => (
           <SongCard key={song.performanceId} song={song} queue={songs} />
         ))}
       </List>
-      {hasMore && <div ref={sentinelRef} style={{ height: 1 }} />}
+      {!nested && hasMore && <div ref={sentinelRef} style={{ height: 1 }} />}
     </>
   );
 }

@@ -11,3 +11,9 @@ declare module "virtual:performances" {
   const performances: Performance[];
   export default performances;
 }
+
+declare module "virtual:videos" {
+  import type { Video } from "./data/types";
+  const videos: Video[];
+  export default videos;
+}

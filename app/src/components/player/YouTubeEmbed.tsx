@@ -1,4 +1,4 @@
-import { useRef, useCallback, useEffect } from "react";
+import { useRef, useCallback, useEffect, useMemo } from "react";
 import YouTube, { type YouTubeEvent } from "react-youtube";
 import Box from "@mui/material/Box";
 import {
@@ -15,10 +15,22 @@ export default function YouTubeEmbed() {
   const setIsPlaying = usePlayerStore((s) => s.setIsPlaying);
   const playNext = usePlayerStore((s) => s.playNext);
 
-  const prevPerfIdRef = useRef<string | null>(null);
+  // 初回マウント時の値を保持。react-youtube の shouldUpdateVideo / shouldResetPlayer を
+  // 発火させないために、YouTube コンポーネントに渡す props を安定化する。
+  // 曲の遷移はすべて useEffect 経由で player API を直接呼ぶ。
+  const initialVideoIdRef = useRef(currentSong?.videoId ?? "");
+  const initialStartRef = useRef(currentSong?.startSeconds ?? 0);
+  const prevPerfIdRef = useRef<string | null>(
+    currentSong?.performanceId ?? null,
+  );
+
+  // 曲遷移中フラグ: seekTo/loadVideoById の直後にYouTubeが発火する
+  // state=2 (paused) を無視するため
+  const transitioningRef = useRef(false);
 
   useAutoAdvance();
 
+  // 曲が変わったら player API で直接 seek / load する
   useEffect(() => {
     if (!currentSong) return;
     const player = getPlayerRef();
@@ -26,6 +38,7 @@ export default function YouTubeEmbed() {
 
     if (prevPerfIdRef.current !== currentSong.performanceId) {
       prevPerfIdRef.current = currentSong.performanceId;
+      transitioningRef.current = true;
       try {
         const currentVideoUrl = player.getVideoUrl?.() ?? "";
         const isSameVideo = currentVideoUrl.includes(currentSong.videoId);
@@ -47,7 +60,10 @@ export default function YouTubeEmbed() {
     }
   }, [currentSong]);
 
+  // ユーザー操作による再生/一時停止の同期
+  // （遷移中は無視 — 遷移中のpause/playはonStateChangeで制御される）
   useEffect(() => {
+    if (transitioningRef.current) return;
     const player = getPlayerRef();
     if (!player) return;
     if (isPlaying) {
@@ -64,14 +80,35 @@ export default function YouTubeEmbed() {
   const onStateChange = useCallback(
     (e: YouTubeEvent) => {
       if (e.data === 0) {
+        // 動画の終端到達
         playNext();
       } else if (e.data === 1) {
+        // 再生開始 — 遷移完了
+        transitioningRef.current = false;
         setIsPlaying(true);
       } else if (e.data === 2) {
-        setIsPlaying(false);
+        // 一時停止 — 遷移中なら無視（seek/load中のpauseイベント）
+        if (!transitioningRef.current) {
+          setIsPlaying(false);
+        }
       }
     },
-    [playNext, setIsPlaying]
+    [playNext, setIsPlaying],
+  );
+
+  // react-youtube に渡す opts を安定化（start を固定して shouldUpdateVideo を防ぐ）
+  const opts = useMemo(
+    () => ({
+      width: "100%",
+      height: "100%",
+      playerVars: {
+        autoplay: 1 as const,
+        start: initialStartRef.current,
+        controls: 1 as const,
+        modestbranding: 1 as const,
+      },
+    }),
+    [],
   );
 
   if (!currentSong) return null;
@@ -79,17 +116,8 @@ export default function YouTubeEmbed() {
   return (
     <Box sx={{ width: "100%", aspectRatio: "16/9", bgcolor: "black" }}>
       <YouTube
-        videoId={currentSong.videoId}
-        opts={{
-          width: "100%",
-          height: "100%",
-          playerVars: {
-            autoplay: 1,
-            start: currentSong.startSeconds,
-            controls: 1,
-            modestbranding: 1,
-          },
-        }}
+        videoId={initialVideoIdRef.current}
+        opts={opts}
         onReady={onReady}
         onStateChange={onStateChange}
         style={{ width: "100%", height: "100%" }}

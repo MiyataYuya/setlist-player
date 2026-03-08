@@ -25,29 +25,28 @@ function shuffleArray<T>(arr: T[]): T[] {
 
 interface PlayerState {
   queue: SongPerformance[];
-  /** シャッフル前の元キュー（シャッフルOFF時に復元用） */
-  originalQueue: SongPerformance[];
   currentIndex: number;
   isPlaying: boolean;
-  isShuffle: boolean;
   isRepeat: boolean;
+  isPlayerOpen: boolean;
 
   playSong: (song: SongPerformance, queue?: SongPerformance[]) => void;
   playNext: () => void;
   playPrev: () => void;
   togglePlay: () => void;
   setIsPlaying: (v: boolean) => void;
-  toggleShuffle: () => void;
+  shuffleQueue: () => void;
   toggleRepeat: () => void;
+  openPlayer: () => void;
+  closePlayer: () => void;
 }
 
 export const usePlayerStore = create<PlayerState>((set, get) => ({
   queue: [],
-  originalQueue: [],
   currentIndex: -1,
   isPlaying: false,
-  isShuffle: false,
   isRepeat: false,
+  isPlayerOpen: false,
 
   playSong: (song, queue) => {
     useHistoryStore.getState().addToHistory(song.performanceId);
@@ -57,16 +56,16 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
       );
       set({
         queue,
-        originalQueue: queue,
         currentIndex: idx >= 0 ? idx : 0,
         isPlaying: true,
+        isPlayerOpen: true,
       });
     } else {
       set({
         queue: [song],
-        originalQueue: [song],
         currentIndex: 0,
         isPlaying: true,
+        isPlayerOpen: true,
       });
     }
   },
@@ -94,40 +93,36 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
   togglePlay: () => set((s) => ({ isPlaying: !s.isPlaying })),
   setIsPlaying: (v) => set({ isPlaying: v }),
 
-  toggleShuffle: () => {
-    const { isShuffle, queue, originalQueue, currentIndex } = get();
-    const currentSong = currentIndex >= 0 ? queue[currentIndex] : null;
+  shuffleQueue: () => {
+    const { queue, currentIndex } = get();
+    if (queue.length === 0) return;
 
-    if (!isShuffle) {
-      // シャッフルON: 現在の曲を先頭に、残りをシャッフル
-      if (currentSong) {
-        const rest = queue.filter(
-          (s) => s.performanceId !== currentSong.performanceId
-        );
-        const shuffled = [currentSong, ...shuffleArray(rest)];
-        set({ isShuffle: true, queue: shuffled, currentIndex: 0 });
-      } else {
-        set({ isShuffle: true, queue: shuffleArray(queue), currentIndex: 0 });
-      }
+    const currentSong = currentIndex >= 0 ? queue[currentIndex] : null;
+    if (currentSong) {
+      const rest = queue.filter(
+        (s) => s.performanceId !== currentSong.performanceId
+      );
+      set({ queue: [currentSong, ...shuffleArray(rest)], currentIndex: 0 });
     } else {
-      // シャッフルOFF: 元の順序に戻す
-      if (currentSong) {
-        const idx = originalQueue.findIndex(
-          (s) => s.performanceId === currentSong.performanceId
-        );
-        set({
-          isShuffle: false,
-          queue: originalQueue,
-          currentIndex: idx >= 0 ? idx : 0,
-        });
-      } else {
-        set({ isShuffle: false, queue: originalQueue, currentIndex: 0 });
-      }
+      set({ queue: shuffleArray(queue), currentIndex: 0 });
     }
   },
 
   toggleRepeat: () => set((s) => ({ isRepeat: !s.isRepeat })),
+
+  openPlayer: () => {
+    const { queue } = get();
+    if (queue.length === 0) return;
+    set({ isPlayerOpen: true });
+  },
+  closePlayer: () => set({ isPlayerOpen: false }),
 }));
+
+/* デバッグ用: devモードでstoreとplayerRefをwindowに公開 */
+if (import.meta.env.DEV) {
+  (window as unknown as Record<string, unknown>).__playerStore = usePlayerStore;
+  (window as unknown as Record<string, unknown>).__getPlayerRef = getPlayerRef;
+}
 
 /** 現在再生中の曲を取得するセレクタ */
 export const useCurrentSong = () =>

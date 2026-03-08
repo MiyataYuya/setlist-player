@@ -28,11 +28,10 @@ describe("playerStore", () => {
   beforeEach(() => {
     usePlayerStore.setState({
       queue: [],
-      originalQueue: [],
       currentIndex: -1,
       isPlaying: false,
-      isShuffle: false,
       isRepeat: false,
+      isPlayerOpen: false,
     });
   });
 
@@ -41,7 +40,6 @@ describe("playerStore", () => {
     act(() => usePlayerStore.getState().playSong(songB, queue));
     const s = usePlayerStore.getState();
     expect(s.queue).toBe(queue);
-    expect(s.originalQueue).toBe(queue);
     expect(s.currentIndex).toBe(1);
     expect(s.isPlaying).toBe(true);
   });
@@ -130,12 +128,11 @@ describe("playerStore", () => {
 
   // --- シャッフル ---
 
-  // #12 toggleShuffle ON: キューがシャッフルされ、現在の曲が先頭に来る
-  it("toggleShuffle ON shuffles queue with current song at index 0", () => {
-    usePlayerStore.setState({ queue: [...queue], originalQueue: [...queue], currentIndex: 2 });
-    act(() => usePlayerStore.getState().toggleShuffle());
+  // #12 shuffleQueue: キューがシャッフルされ、現在の曲が先頭に来る
+  it("shuffleQueue shuffles queue with current song at index 0", () => {
+    usePlayerStore.setState({ queue: [...queue], currentIndex: 2 });
+    act(() => usePlayerStore.getState().shuffleQueue());
     const s = usePlayerStore.getState();
-    expect(s.isShuffle).toBe(true);
     expect(s.currentIndex).toBe(0);
     // 現在の曲（songC）が先頭
     expect(s.queue[0].performanceId).toBe("c");
@@ -146,89 +143,63 @@ describe("playerStore", () => {
     expect(ids).toEqual(["a", "b", "c", "d", "e"]);
   });
 
-  // #13 toggleShuffle OFF: 元のキュー順に戻り、現在の曲のindexが復元される
-  it("toggleShuffle OFF restores original queue order", () => {
-    usePlayerStore.setState({
-      queue: [songC, songE, songA, songD, songB],
-      originalQueue: [...queue],
-      currentIndex: 0, // songC
-      isShuffle: true,
-    });
-    act(() => usePlayerStore.getState().toggleShuffle());
-    const s = usePlayerStore.getState();
-    expect(s.isShuffle).toBe(false);
-    expect(s.queue.map((q) => q.performanceId)).toEqual(["a", "b", "c", "d", "e"]);
-    // songCの元のindex = 2
-    expect(s.currentIndex).toBe(2);
+  // #13 shuffleQueue: 連続で押すと毎回シャッフルされる
+  it("shuffleQueue can be called multiple times", () => {
+    usePlayerStore.setState({ queue: [...queue], currentIndex: 0 });
+    act(() => usePlayerStore.getState().shuffleQueue());
+    const first = usePlayerStore.getState().queue.map((q) => q.performanceId);
+    expect(first[0]).toBe("a"); // 現在の曲が先頭
+    expect(first.length).toBe(5);
+
+    act(() => usePlayerStore.getState().shuffleQueue());
+    const second = usePlayerStore.getState().queue.map((q) => q.performanceId);
+    expect(second[0]).toBe("a"); // 現在の曲が先頭
+    expect(second.length).toBe(5);
   });
 
-  // #14 playNext with shuffle: 順番に次へ進む（シャッフル済みキューの順序通り）
-  it("playNext with shuffle advances through shuffled queue", () => {
-    usePlayerStore.setState({
-      queue: [songC, songA, songE, songB, songD],
-      originalQueue: [...queue],
-      currentIndex: 0,
-      isPlaying: true,
-      isShuffle: true,
-    });
-    act(() => usePlayerStore.getState().playNext());
-    const s = usePlayerStore.getState();
-    expect(s.currentIndex).toBe(1);
-    expect(s.queue[s.currentIndex].performanceId).toBe("a");
+  // #14 shuffleQueue: 空キューでは何もしない
+  it("shuffleQueue with empty queue does nothing", () => {
+    usePlayerStore.setState({ queue: [], currentIndex: -1 });
+    act(() => usePlayerStore.getState().shuffleQueue());
+    expect(usePlayerStore.getState().queue).toEqual([]);
+    expect(usePlayerStore.getState().currentIndex).toBe(-1);
   });
 
-  // #15 playNext at end of shuffled queue with repeat=false
-  it("playNext at end of shuffled queue with repeat=false stops", () => {
-    usePlayerStore.setState({
-      queue: [songC, songA, songE, songB, songD],
-      originalQueue: [...queue],
-      currentIndex: 4,
-      isPlaying: true,
-      isShuffle: true,
-      isRepeat: false,
-    });
-    act(() => usePlayerStore.getState().playNext());
-    expect(usePlayerStore.getState().isPlaying).toBe(false);
-  });
-
-  // #16 playNext at end of shuffled queue with repeat=true wraps
-  it("playNext at end of shuffled queue with repeat=true wraps to 0", () => {
-    usePlayerStore.setState({
-      queue: [songC, songA, songE, songB, songD],
-      originalQueue: [...queue],
-      currentIndex: 4,
-      isPlaying: true,
-      isShuffle: true,
-      isRepeat: true,
-    });
-    act(() => usePlayerStore.getState().playNext());
+  // #15 shuffleQueue: 1曲のみのキュー
+  it("shuffleQueue with single song keeps it", () => {
+    usePlayerStore.setState({ queue: [songA], currentIndex: 0 });
+    act(() => usePlayerStore.getState().shuffleQueue());
+    expect(usePlayerStore.getState().queue).toEqual([songA]);
     expect(usePlayerStore.getState().currentIndex).toBe(0);
   });
 
-  // #17 シャッフルON→曲選択→シャッフルOFF の一連フロー
-  it("shuffle ON → play next → shuffle OFF preserves current song", () => {
-    // 初期: songBを再生中
-    act(() => usePlayerStore.getState().playSong(songB, [...queue]));
+  // --- プレイヤーオーバーレイ ---
 
-    // シャッフルON
-    act(() => usePlayerStore.getState().toggleShuffle());
-    const afterShuffle = usePlayerStore.getState();
-    expect(afterShuffle.isShuffle).toBe(true);
-    expect(afterShuffle.queue[0].performanceId).toBe("b"); // 現在の曲が先頭
+  // #16 openPlayer
+  it("openPlayer sets isPlayerOpen to true", () => {
+    usePlayerStore.setState({ queue, currentIndex: 0, isPlayerOpen: false });
+    act(() => usePlayerStore.getState().openPlayer());
+    expect(usePlayerStore.getState().isPlayerOpen).toBe(true);
+  });
 
-    // 次の曲へ
-    act(() => usePlayerStore.getState().playNext());
-    const nextSong = usePlayerStore.getState().queue[usePlayerStore.getState().currentIndex];
+  // #17 openPlayer with empty queue does nothing
+  it("openPlayer with empty queue does nothing", () => {
+    usePlayerStore.setState({ queue: [], currentIndex: -1, isPlayerOpen: false });
+    act(() => usePlayerStore.getState().openPlayer());
+    expect(usePlayerStore.getState().isPlayerOpen).toBe(false);
+  });
 
-    // シャッフルOFF
-    act(() => usePlayerStore.getState().toggleShuffle());
-    const afterUnshuffle = usePlayerStore.getState();
-    expect(afterUnshuffle.isShuffle).toBe(false);
-    // 元のキュー順に戻っている
-    expect(afterUnshuffle.queue.map((q) => q.performanceId)).toEqual(["a", "b", "c", "d", "e"]);
-    // 現在の曲が維持されている
-    expect(afterUnshuffle.queue[afterUnshuffle.currentIndex].performanceId).toBe(
-      nextSong.performanceId
-    );
+  // #18 closePlayer
+  it("closePlayer sets isPlayerOpen to false", () => {
+    usePlayerStore.setState({ isPlayerOpen: true });
+    act(() => usePlayerStore.getState().closePlayer());
+    expect(usePlayerStore.getState().isPlayerOpen).toBe(false);
+  });
+
+  // #19 playSong opens player
+  it("playSong also opens player", () => {
+    usePlayerStore.setState({ isPlayerOpen: false });
+    act(() => usePlayerStore.getState().playSong(songA, queue));
+    expect(usePlayerStore.getState().isPlayerOpen).toBe(true);
   });
 });

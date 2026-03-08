@@ -6,24 +6,23 @@ import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import PauseIcon from "@mui/icons-material/Pause";
 import SkipNextIcon from "@mui/icons-material/SkipNext";
 import Paper from "@mui/material/Paper";
-import { useNavigate, useLocation } from "react-router-dom";
 import { usePlayerStore, useCurrentSong } from "../../stores/playerStore";
 
 export default function MiniPlayer() {
   const currentSong = useCurrentSong();
   const isPlaying = usePlayerStore((s) => s.isPlaying);
+  const isPlayerOpen = usePlayerStore((s) => s.isPlayerOpen);
   const togglePlay = usePlayerStore((s) => s.togglePlay);
   const playNext = usePlayerStore((s) => s.playNext);
-  const navigate = useNavigate();
-  const location = useLocation();
+  const openPlayer = usePlayerStore((s) => s.openPlayer);
 
-  if (!currentSong || location.pathname === "/player") return null;
+  if (!currentSong || isPlayerOpen) return null;
 
   return (
     <Paper
       sx={{
         position: "fixed",
-        bottom: 56, // BottomNav の高さ分上に
+        bottom: "calc(56px + env(safe-area-inset-bottom, 0px))",
         left: 0,
         right: 0,
         zIndex: 1100,
@@ -38,7 +37,7 @@ export default function MiniPlayer() {
           py: 0.5,
           cursor: "pointer",
         }}
-        onClick={() => navigate("/player")}
+        onClick={() => openPlayer()}
       >
         <Avatar
           variant="rounded"

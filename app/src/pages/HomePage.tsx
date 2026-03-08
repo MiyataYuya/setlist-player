@@ -17,8 +17,7 @@ type ViewMode = "stream" | "song";
 
 export default function HomePage() {
   const playSong = usePlayerStore((s) => s.playSong);
-  const toggleShuffle = usePlayerStore((s) => s.toggleShuffle);
-  const isShuffle = usePlayerStore((s) => s.isShuffle);
+  const shuffleQueue = usePlayerStore((s) => s.shuffleQueue);
   const [viewMode, setViewMode] = useState<ViewMode>("song");
   const [sortOption, setSortOption] = useState<SortOption>("date-desc");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
@@ -65,9 +64,9 @@ export default function HomePage() {
   }
 
   const handleShuffleAll = () => {
-    if (!isShuffle) toggleShuffle();
     const random = Math.floor(Math.random() * songPerformances.length);
     playSong(songPerformances[random], songPerformances);
+    shuffleQueue();
   };
 
   return (

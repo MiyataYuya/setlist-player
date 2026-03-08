@@ -16,7 +16,6 @@ describe("PlayerControls", () => {
       queue: [song],
       currentIndex: 0,
       isPlaying: false,
-      isShuffle: false,
       isRepeat: false,
     });
   });
@@ -50,12 +49,20 @@ describe("PlayerControls", () => {
   });
 
   // #3 shuffle
-  it("toggleShuffle on shuffle button click", async () => {
+  it("shuffleQueue on shuffle button click", async () => {
+    usePlayerStore.setState({
+      queue: [song, { ...song, performanceId: "p2" }, { ...song, performanceId: "p3" }],
+      currentIndex: 0,
+    });
     const user = userEvent.setup();
     renderWithProviders(<PlayerControls />);
     const shuffleBtn = screen.getByTestId("ShuffleIcon").closest("button")!;
     await user.click(shuffleBtn);
-    expect(usePlayerStore.getState().isShuffle).toBe(true);
+    const s = usePlayerStore.getState();
+    // 現在の曲が先頭に維持される
+    expect(s.queue[0].performanceId).toBe("p1");
+    expect(s.currentIndex).toBe(0);
+    expect(s.queue.length).toBe(3);
   });
 
   // #4 repeat

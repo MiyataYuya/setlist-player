@@ -8,36 +8,98 @@ import LibraryPage from "./pages/LibraryPage";
 import PlayerScreen from "./components/player/PlayerScreen";
 import PlaylistPage from "./pages/PlaylistPage";
 import YouTubeEmbed from "./components/player/YouTubeEmbed";
-import { useCurrentSong } from "./stores/playerStore";
+import { useCurrentSong, usePlayerStore } from "./stores/playerStore";
+import { useState, useEffect, useRef } from "react";
+
+function FadeRoutes({ children }: { children: React.ReactNode }) {
+  const location = useLocation();
+  const [fadeIn, setFadeIn] = useState(true);
+  const prevPathRef = useRef(location.pathname);
+
+  useEffect(() => {
+    if (location.pathname !== prevPathRef.current) {
+      prevPathRef.current = location.pathname;
+      setFadeIn(false);
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => setFadeIn(true));
+      });
+    }
+  }, [location.pathname]);
+
+  return (
+    <Box
+      sx={{
+        opacity: fadeIn ? 1 : 0,
+        transition: fadeIn ? "opacity 200ms ease-in" : "none",
+      }}
+    >
+      {children}
+    </Box>
+  );
+}
 
 function AppContent() {
-  const location = useLocation();
   const currentSong = useCurrentSong();
-  const isPlayerPage = location.pathname === "/player";
+  const isPlayerOpen = usePlayerStore((s) => s.isPlayerOpen);
+
+  // ブラウザバックで再生画面を閉じる
+  useEffect(() => {
+    if (isPlayerOpen) {
+      window.history.pushState({ playerOpen: true }, "");
+    }
+  }, [isPlayerOpen]);
+
+  useEffect(() => {
+    const handlePopState = () => {
+      if (usePlayerStore.getState().isPlayerOpen) {
+        usePlayerStore.getState().closePlayer();
+      }
+    };
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, []);
 
   return (
     <>
       <Box
         sx={{
-          pb: isPlayerPage ? 0 : "120px",
-          minHeight: isPlayerPage ? undefined : "100vh",
-          overscrollBehavior: isPlayerPage ? "none" : undefined,
-          overflow: isPlayerPage ? "hidden" : undefined,
+          pb: "calc(120px + env(safe-area-inset-bottom, 0px))",
+          minHeight: "100vh",
         }}
       >
-        {currentSong && (
-          <Box sx={{ display: isPlayerPage ? "block" : "none" }}>
-            <YouTubeEmbed />
-          </Box>
-        )}
-        <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/search" element={<SearchPage />} />
-          <Route path="/library" element={<LibraryPage />} />
-          <Route path="/playlist/:id" element={<PlaylistPage />} />
-          <Route path="/player" element={<PlayerScreen />} />
-        </Routes>
+        <FadeRoutes>
+          <Routes>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/search" element={<SearchPage />} />
+            <Route path="/library" element={<LibraryPage />} />
+            <Route path="/playlist/:id" element={<PlaylistPage />} />
+          </Routes>
+        </FadeRoutes>
       </Box>
+
+      {/* 再生画面オーバーレイ（BottomNavの上にスライド、BottomNav自体は常に表示） */}
+      {currentSong && (
+        <Box
+          sx={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: "calc(56px + env(safe-area-inset-bottom, 0px))",
+            zIndex: 1100,
+            transform: isPlayerOpen ? "translateY(0)" : "translateY(100%)",
+            transition: "transform 300ms cubic-bezier(0.4, 0, 0.2, 1)",
+            bgcolor: "background.default",
+            display: "flex",
+            flexDirection: "column",
+            overflow: "hidden",
+          }}
+        >
+          <YouTubeEmbed />
+          <PlayerScreen />
+        </Box>
+      )}
+
       <MiniPlayer />
       <BottomNav />
     </>

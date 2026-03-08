@@ -6,6 +6,7 @@ import List from "@mui/material/List";
 import ListItemButton from "@mui/material/ListItemButton";
 import ListItemText from "@mui/material/ListItemText";
 import LabelIcon from "@mui/icons-material/Label";
+import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import QueueMusicIcon from "@mui/icons-material/QueueMusic";
 import PlayerControls from "./PlayerControls";
 import SeekBar from "./SeekBar";
@@ -52,13 +53,21 @@ export default function PlayerScreen() {
       sx={{
         display: "flex",
         flexDirection: "column",
-        height: "calc(100dvh - 56.25vw - 56px)",
-        minHeight: 280,
+        flex: 1,
+        minHeight: 0,
         overscrollBehavior: "none",
       }}
     >
+      {/* 閉じるボタン */}
+      <IconButton
+        onClick={() => window.history.back()}
+        sx={{ alignSelf: "flex-start", ml: 1, mt: 0.5 }}
+      >
+        <KeyboardArrowDownIcon />
+      </IconButton>
+
       {/* 曲情報 */}
-      <Box sx={{ px: 3, pt: 2 }}>
+      <Box sx={{ px: 3 }}>
         <Box
           sx={{
             display: "flex",

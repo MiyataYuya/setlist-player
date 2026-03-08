@@ -12,7 +12,7 @@ const song: SongPerformance = {
 
 describe("MiniPlayer", () => {
   beforeEach(() => {
-    usePlayerStore.setState({ queue: [], currentIndex: -1, isPlaying: false });
+    usePlayerStore.setState({ queue: [], currentIndex: -1, isPlaying: false, isPlayerOpen: false });
   });
 
   // #1 no song selected
@@ -21,10 +21,10 @@ describe("MiniPlayer", () => {
     expect(container.firstChild).toBeNull();
   });
 
-  // #2 hidden on /player
-  it("renders nothing on /player page", () => {
-    usePlayerStore.setState({ queue: [song], currentIndex: 0, isPlaying: true });
-    const { container } = renderWithRoute(<MiniPlayer />, ["/player"]);
+  // #2 hidden when player overlay is open
+  it("renders nothing when player is open", () => {
+    usePlayerStore.setState({ queue: [song], currentIndex: 0, isPlaying: true, isPlayerOpen: true });
+    const { container } = renderWithRoute(<MiniPlayer />, ["/"]);
     expect(container.firstChild).toBeNull();
   });
 

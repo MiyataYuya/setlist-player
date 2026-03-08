@@ -10,19 +10,17 @@ import { usePlayerStore } from "../../stores/playerStore";
 
 export default function PlayerControls() {
   const isPlaying = usePlayerStore((s) => s.isPlaying);
-  const isShuffle = usePlayerStore((s) => s.isShuffle);
   const isRepeat = usePlayerStore((s) => s.isRepeat);
   const togglePlay = usePlayerStore((s) => s.togglePlay);
   const playNext = usePlayerStore((s) => s.playNext);
   const playPrev = usePlayerStore((s) => s.playPrev);
-  const toggleShuffle = usePlayerStore((s) => s.toggleShuffle);
+  const shuffleQueue = usePlayerStore((s) => s.shuffleQueue);
   const toggleRepeat = usePlayerStore((s) => s.toggleRepeat);
 
   return (
     <Stack direction="row" alignItems="center" justifyContent="space-between">
       <IconButton
-        onClick={toggleShuffle}
-        color={isShuffle ? "primary" : "default"}
+        onClick={shuffleQueue}
         size="large"
       >
         <ShuffleIcon sx={{ fontSize: 28 }} />

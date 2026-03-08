@@ -14,7 +14,7 @@ export default function PlayerScreen() {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          height: "100%",
+          height: "calc(100vh - 120px)",
         }}
       >
         <Typography color="text.secondary">
@@ -33,19 +33,20 @@ export default function PlayerScreen() {
       sx={{
         display: "flex",
         flexDirection: "column",
-        height: "100%",
+        /* 動画の16:9 + 曲情報 + コントロールをビューポート内に収める */
+        /* BottomNavが約56px + MiniPlayerが非表示(player画面では) */
+        height: "calc(100vh - 56px)",
       }}
     >
-      {/* YouTubeEmbed は App.tsx で常時マウント */}
+      {/* YouTubeEmbed は App.tsx で常時マウント — ここでは残りスペースを使う */}
 
-      {/* 曲情報 — 動画の下に余白を持たせて配置 */}
-      <Box sx={{ px: 3, pt: 4, flex: 1, display: "flex", flexDirection: "column" }}>
+      {/* 曲情報 */}
+      <Box sx={{ px: 3, pt: 3 }}>
         <Box
           sx={{
             display: "flex",
             alignItems: "flex-start",
             justifyContent: "space-between",
-            mb: 1,
           }}
         >
           <Box sx={{ minWidth: 0, flex: 1 }}>
@@ -65,11 +66,18 @@ export default function PlayerScreen() {
           </Box>
           <FavoriteButton performanceId={currentSong.performanceId} />
         </Box>
+      </Box>
 
-        {/* コントロール — 曲情報の下に余白を持たせて配置 */}
-        <Box sx={{ mt: 4 }}>
-          <PlayerControls />
-        </Box>
+      {/* コントロール — 残りスペースの中央に配置 */}
+      <Box
+        sx={{
+          flex: 1,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <PlayerControls />
       </Box>
     </Box>
   );

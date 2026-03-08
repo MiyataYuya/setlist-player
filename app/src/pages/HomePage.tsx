@@ -24,7 +24,7 @@ export default function HomePage() {
           ホーム
         </Typography>
         <Typography variant="body2" color="text.secondary" gutterBottom>
-          {songPerformances.length} パフォーマンス
+          {songPerformances.length} 曲
         </Typography>
         <Button
           variant="contained"

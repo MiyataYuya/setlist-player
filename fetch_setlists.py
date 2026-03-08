@@ -60,6 +60,7 @@ class SetlistComment:
 class VideoSetlist:
     video_id: str
     video_url: str
+    published_at: Optional[str]  # 動画の公開日時 (ISO 8601)
     candidates: list[SetlistComment]
     best_comment: Optional[str]  # 最も信頼できるセトリコメント
 
@@ -87,6 +88,25 @@ def iter_playlist_video_ids(youtube, playlist_id: str) -> Iterable[str]:
         page_token = resp.get("nextPageToken")
         if not page_token:
             break
+
+
+def fetch_video_published_at(youtube, video_ids: list[str]) -> dict[str, Optional[str]]:
+    """動画の公開日時を一括取得する（最大50件ずつ）"""
+    result: dict[str, Optional[str]] = {}
+    for i in range(0, len(video_ids), 50):
+        batch = video_ids[i:i + 50]
+        resp = youtube.videos().list(
+            part="snippet",
+            id=",".join(batch),
+            fields="items(id,snippet/publishedAt)",
+        ).execute()
+        for item in resp.get("items", []):
+            result[item["id"]] = item["snippet"]["publishedAt"]
+    # 取得できなかった動画はNone
+    for vid in video_ids:
+        if vid not in result:
+            result[vid] = None
+    return result
 
 
 def fetch_setlist_comments(youtube, video_id: str, max_pages: int = 10) -> list[SetlistComment]:
@@ -182,29 +202,46 @@ def main() -> None:
     print(f"Already fetched: {total - new_count}")
     print(f"New to fetch: {new_count}")
 
-    if new_count == 0:
+    # published_at が未取得の動画を補完（プレイリスト外の既存エントリも含む）
+    all_known_vids = set(unique_video_ids) | set(results.keys())
+    vids_missing_date = [vid for vid in all_known_vids if not results.get(vid, {}).get("published_at")]
+    if vids_missing_date:
+        print(f"\nFetching published_at for {len(vids_missing_date)} videos...")
+        pub_dates = fetch_video_published_at(youtube, vids_missing_date)
+        for vid, pub_at in pub_dates.items():
+            if vid in results:
+                results[vid]["published_at"] = pub_at
+        dirty = True
+    else:
+        dirty = False
+
+    if new_count == 0 and not dirty:
         print("Nothing new to fetch.")
     else:
-        print(f"\nFetching setlists for {new_count} new videos...")
+        if new_count > 0:
+            print(f"\nFetching setlists for {new_count} new videos...")
+            # 新規動画の公開日時を一括取得
+            pub_dates = fetch_video_published_at(youtube, new_video_ids)
 
-        for i, vid in enumerate(new_video_ids, start=1):
-            print(f"[{i}/{new_count}] {vid}...", end=" ")
+            for i, vid in enumerate(new_video_ids, start=1):
+                print(f"[{i}/{new_count}] {vid}...", end=" ")
 
-            candidates = fetch_setlist_comments(youtube, vid, max_pages=10)
+                candidates = fetch_setlist_comments(youtube, vid, max_pages=10)
 
-            video_data = VideoSetlist(
-                video_id=vid,
-                video_url=f"https://www.youtube.com/watch?v={vid}",
-                candidates=[asdict(c) for c in candidates],
-                best_comment=candidates[0].text if candidates else None,
-            )
+                video_data = VideoSetlist(
+                    video_id=vid,
+                    video_url=f"https://www.youtube.com/watch?v={vid}",
+                    published_at=pub_dates.get(vid),
+                    candidates=[asdict(c) for c in candidates],
+                    best_comment=candidates[0].text if candidates else None,
+                )
 
-            results[vid] = asdict(video_data)
+                results[vid] = asdict(video_data)
 
-            if candidates:
-                print(f"found {len(candidates)} candidate(s), best has {candidates[0].timestamp_lines} timestamps")
-            else:
-                print("NO SETLIST FOUND")
+                if candidates:
+                    print(f"found {len(candidates)} candidate(s), best has {candidates[0].timestamp_lines} timestamps")
+                else:
+                    print("NO SETLIST FOUND")
 
         # JSON出力
         with open(OUTPUT_FILE, "w", encoding="utf-8") as f:

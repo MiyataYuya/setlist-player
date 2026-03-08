@@ -50,6 +50,7 @@ class SongEntry:
 @dataclass
 class Performance:
     video_id: str
+    published_at: Optional[str]
     song_name: str
     artist: Optional[str]
     start_time: Optional[str]
@@ -195,6 +196,7 @@ def main() -> None:
 
     for video_id, video_data in data.items():
         best_comment = video_data.get("best_comment")
+        published_at = video_data.get("published_at")
         if not best_comment:
             videos_without_songs += 1
             continue
@@ -210,6 +212,7 @@ def main() -> None:
         for song in songs:
             all_performances.append(Performance(
                 video_id=video_id,
+                published_at=published_at,
                 song_name=song.song_name,
                 artist=song.artist,
                 start_time=song.start_time,
@@ -219,7 +222,7 @@ def main() -> None:
     # CSV出力: song_performances.csv
     with open(OUTPUT_PERFORMANCES, "w", newline="", encoding="utf-8") as f:
         w = csv.DictWriter(f, fieldnames=[
-            "song_name", "artist", "video_id", "video_url", "start_time", "end_time",
+            "song_name", "artist", "video_id", "video_url", "published_at", "start_time", "end_time",
         ])
         w.writeheader()
         for p in all_performances:
@@ -228,6 +231,7 @@ def main() -> None:
                 "artist": p.artist or "",
                 "video_id": p.video_id,
                 "video_url": make_video_url(p.video_id, p.start_time),
+                "published_at": p.published_at or "",
                 "start_time": p.start_time or "",
                 "end_time": p.end_time or "",
             })

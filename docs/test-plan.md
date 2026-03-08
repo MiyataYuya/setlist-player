@@ -23,21 +23,25 @@
 
 | # | テストケース | 確認内容 |
 |---|-------------|---------|
-| 1 | playSong(song, queue) | queue/currentIndex/isPlayingが正しくセットされる |
+| 1 | playSong(song, queue) | queue/originalQueue/currentIndex/isPlayingが正しくセットされる |
 | 2 | playSong(song) キューなし | queue=[song], currentIndex=0 |
 | 3 | playSong() 履歴追加 | historyStore.addToHistory が呼ばれる |
 | 4 | playNext() 通常 | currentIndex が +1 される |
 | 5 | playNext() キュー末尾 + repeat=false | isPlaying=false になる |
 | 6 | playNext() キュー末尾 + repeat=true | currentIndex=0 に戻る |
-| 7 | playNext() shuffle=true | currentIndex がランダムに変わる |
-| 8 | playNext() 空キュー | 何も起きない |
-| 9 | playPrev() 通常 | currentIndex が -1 される |
-| 10 | playPrev() 先頭 | キュー末尾に戻る |
-| 11 | togglePlay() | isPlaying が反転する |
-| 12 | toggleShuffle() | isShuffle が反転する |
-| 13 | toggleRepeat() | isRepeat が反転する |
-| 14 | useCurrentSong() | currentIndex>=0 なら該当曲、-1 なら undefined |
-| 15 | getPlayerRef() / setPlayerRef() | モジュールスコープでYouTube Player参照を管理 |
+| 7 | playNext() 空キュー | 何も起きない |
+| 8 | playPrev() 通常 | currentIndex が -1 される |
+| 9 | playPrev() 先頭 | キュー末尾に戻る |
+| 10 | togglePlay() | isPlaying が反転する |
+| 11 | toggleRepeat() | isRepeat が反転・復元する |
+| 12 | toggleShuffle() ON | キューがシャッフルされ、現在の曲が先頭(index=0)に来る。全曲が含まれる |
+| 13 | toggleShuffle() OFF | originalQueue から元のキュー順に復元され、現在の曲のindexが正しく設定される |
+| 14 | playNext() シャッフル済みキュー | シャッフル済みの順序でindex+1に進む（ランダム選択ではない） |
+| 15 | playNext() シャッフルキュー末尾 + repeat=false | isPlaying=false になる |
+| 16 | playNext() シャッフルキュー末尾 + repeat=true | currentIndex=0 に戻る |
+| 17 | シャッフルON→再生→OFF | 現在の曲が維持され、元のキュー順に正しく戻る |
+| 18 | useCurrentSong() | currentIndex>=0 なら該当曲、-1 なら undefined |
+| 19 | getPlayerRef() / setPlayerRef() | モジュールスコープでYouTube Player参照を管理 |
 
 ### 2.2 libraryStore (`stores/libraryStore.ts`)
 
@@ -393,6 +397,8 @@
 
 ### P0 (必須 — コア機能)
 - playerStore の playSong / playNext / playPrev
+- **シャッフル: キューの並び替え・復元・現在曲の維持（toggleShuffle ON/OFF）**
+- **リピート: キュー末尾での挙動（repeat ON/OFF × shuffle ON/OFF の組み合わせ）**
 - playerRef のモジュールスコープ管理（getPlayerRef/setPlayerRef）
 - libraryStore の toggleFavorite + localStorage永続化
 - データ結合ロジック（songs.ts の songPerformances, streams）
@@ -414,7 +420,6 @@
 - historyStore / tagStore / playlistStore の CRUD操作
 - TagManager のUI操作
 - 各コンポーネントの表示テスト
-- シャッフル/リピートの境界ケース
 - BottomNav のルーティング
 - Vite CSVプラグインの変換（songs, performances, videos）
 - SearchBar のデバウンス統合テスト

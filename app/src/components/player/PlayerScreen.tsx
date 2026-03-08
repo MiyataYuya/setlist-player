@@ -12,14 +12,12 @@ import SeekBar from "./SeekBar";
 import FavoriteButton from "../common/FavoriteButton";
 import TagManager from "../songs/TagManager";
 import { usePlayerStore, useCurrentSong } from "../../stores/playerStore";
-import { useNavigate } from "react-router-dom";
 
 export default function PlayerScreen() {
   const currentSong = useCurrentSong();
   const queue = usePlayerStore((s) => s.queue);
   const currentIndex = usePlayerStore((s) => s.currentIndex);
   const playSong = usePlayerStore((s) => s.playSong);
-  const navigate = useNavigate();
   const [tagManagerOpen, setTagManagerOpen] = useState(false);
 
   if (!currentSong) {
@@ -54,26 +52,6 @@ export default function PlayerScreen() {
         minHeight: 280,
       }}
     >
-      {/* グリップハンドル — タップでホームに戻る */}
-      <Box
-        onClick={() => navigate("/")}
-        sx={{
-          display: "flex",
-          justifyContent: "center",
-          py: 0.75,
-          cursor: "pointer",
-        }}
-      >
-        <Box
-          sx={{
-            width: 36,
-            height: 4,
-            borderRadius: 2,
-            bgcolor: "grey.600",
-          }}
-        />
-      </Box>
-
       {/* 曲情報 */}
       <Box sx={{ px: 3 }}>
         <Box

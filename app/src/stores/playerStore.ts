@@ -84,6 +84,6 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
 /** 現在再生中の曲を取得するセレクタ */
 export const useCurrentSong = () =>
   usePlayerStore(
-    (s) => (s.currentIndex >= 0 ? s.queue[s.currentIndex] : undefined),
-    Object.is
+    (s): SongPerformance | undefined =>
+      s.currentIndex >= 0 ? s.queue[s.currentIndex] : undefined,
   );

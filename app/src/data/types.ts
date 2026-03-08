@@ -2,6 +2,7 @@ export interface Song {
   songId: string;
   title: string;
   artist: string;
+  performanceNote: string;
 }
 
 export interface Performance {

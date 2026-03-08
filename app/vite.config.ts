@@ -10,6 +10,7 @@ interface RawSong {
   song_id: string;
   title: string;
   artist: string;
+  performance_note: string;
 }
 
 interface RawPerformance {
@@ -49,7 +50,7 @@ function csvDataPlugin(): Plugin {
     load(id) {
       if (id === RESOLVED_SONGS) {
         const csv = fs.readFileSync(
-          path.join(dataDir, "app_songs.csv"),
+          path.join(dataDir, "app_songs_enriched.csv"),
           "utf-8"
         );
         const { data } = Papa.parse<RawSong>(csv, { header: true });
@@ -59,6 +60,7 @@ function csvDataPlugin(): Plugin {
             songId: r.song_id,
             title: r.title,
             artist: r.artist,
+            performanceNote: r.performance_note || "",
           }));
         return `export default ${JSON.stringify(parsed)};`;
       }

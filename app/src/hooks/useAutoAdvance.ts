@@ -1,26 +1,22 @@
-import { useEffect, type MutableRefObject } from "react";
-import type { YouTubePlayer } from "react-youtube";
-import type { SongPerformance } from "../data/types";
-import { usePlayerStore } from "../stores/playerStore";
+import { useEffect } from "react";
+import { usePlayerStore, useCurrentSong, getPlayerRef } from "../stores/playerStore";
 
 /**
  * YouTube Playerの再生時刻を500msごとにポーリングし、
  * endSeconds到達で自動的に次の曲へ進む。
  */
-export function useAutoAdvance(
-  playerRef: MutableRefObject<YouTubePlayer | null>,
-  currentSong: SongPerformance | undefined
-) {
+export function useAutoAdvance(): void {
+  const currentSong = useCurrentSong();
   const playNext = usePlayerStore((s) => s.playNext);
   const isPlaying = usePlayerStore((s) => s.isPlaying);
 
   useEffect(() => {
-    if (!playerRef.current || !currentSong || !isPlaying) return;
+    if (!currentSong || !isPlaying) return;
 
-    const intervalId = setInterval(async () => {
+    const intervalId = setInterval(() => {
+      const player = getPlayerRef();
+      if (!player) return;
       try {
-        const player = playerRef.current;
-        if (!player) return;
         const time = player.getCurrentTime();
         if (time >= currentSong.endSeconds) {
           playNext();
@@ -31,5 +27,5 @@ export function useAutoAdvance(
     }, 500);
 
     return () => clearInterval(intervalId);
-  }, [playerRef, currentSong, isPlaying, playNext]);
+  }, [currentSong, isPlaying, playNext]);
 }

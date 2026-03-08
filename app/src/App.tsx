@@ -6,6 +6,7 @@ import HomePage from "./pages/HomePage";
 import SearchPage from "./pages/SearchPage";
 import LibraryPage from "./pages/LibraryPage";
 import PlayerScreen from "./components/player/PlayerScreen";
+import PlaylistPage from "./pages/PlaylistPage";
 import YouTubeEmbed from "./components/player/YouTubeEmbed";
 import { useCurrentSong } from "./stores/playerStore";
 
@@ -18,8 +19,8 @@ function AppContent() {
     <>
       <Box
         sx={{
-          pb: "120px", // BottomNav + MiniPlayer 分の余白
-          minHeight: "100vh",
+          pb: isPlayerPage ? 0 : "120px",
+          minHeight: isPlayerPage ? undefined : "100vh",
         }}
       >
         {currentSong && (
@@ -31,6 +32,7 @@ function AppContent() {
           <Route path="/" element={<HomePage />} />
           <Route path="/search" element={<SearchPage />} />
           <Route path="/library" element={<LibraryPage />} />
+          <Route path="/playlist/:id" element={<PlaylistPage />} />
           <Route path="/player" element={<PlayerScreen />} />
         </Routes>
       </Box>

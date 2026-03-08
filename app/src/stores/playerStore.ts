@@ -1,5 +1,18 @@
 import { create } from "zustand";
+import type { YouTubePlayer } from "react-youtube";
 import type { SongPerformance } from "../data/types";
+import { useHistoryStore } from "./historyStore";
+
+/* ---- module-scope player ref (mutable, outside zustand) ---- */
+let _playerRef: YouTubePlayer | null = null;
+
+export function getPlayerRef(): YouTubePlayer | null {
+  return _playerRef;
+}
+
+export function setPlayerRef(player: YouTubePlayer | null): void {
+  _playerRef = player;
+}
 
 interface PlayerState {
   queue: SongPerformance[];
@@ -26,6 +39,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
   isRepeat: false,
 
   playSong: (song, queue) => {
+    useHistoryStore.getState().addToHistory(song.performanceId);
     if (queue) {
       const idx = queue.findIndex(
         (s) => s.performanceId === song.performanceId
@@ -69,6 +83,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
 
 /** 現在再生中の曲を取得するセレクタ */
 export const useCurrentSong = () =>
-  usePlayerStore((s) =>
-    s.currentIndex >= 0 ? s.queue[s.currentIndex] : undefined
+  usePlayerStore(
+    (s) => (s.currentIndex >= 0 ? s.queue[s.currentIndex] : undefined),
+    Object.is
   );

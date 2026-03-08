@@ -1,11 +1,17 @@
+import { useState } from "react";
 import Box from "@mui/material/Box";
+import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
+import LabelIcon from "@mui/icons-material/Label";
 import PlayerControls from "./PlayerControls";
+import SeekBar from "./SeekBar";
 import FavoriteButton from "../common/FavoriteButton";
+import TagManager from "../songs/TagManager";
 import { useCurrentSong } from "../../stores/playerStore";
 
 export default function PlayerScreen() {
   const currentSong = useCurrentSong();
+  const [tagManagerOpen, setTagManagerOpen] = useState(false);
 
   if (!currentSong) {
     return (
@@ -14,7 +20,7 @@ export default function PlayerScreen() {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          height: "calc(100vh - 120px)",
+          height: "80vh",
         }}
       >
         <Typography color="text.secondary">
@@ -29,19 +35,9 @@ export default function PlayerScreen() {
     : "";
 
   return (
-    <Box
-      sx={{
-        display: "flex",
-        flexDirection: "column",
-        /* 動画の16:9 + 曲情報 + コントロールをビューポート内に収める */
-        /* BottomNavが約56px + MiniPlayerが非表示(player画面では) */
-        height: "calc(100vh - 56px)",
-      }}
-    >
-      {/* YouTubeEmbed は App.tsx で常時マウント — ここでは残りスペースを使う */}
-
+    <>
       {/* 曲情報 */}
-      <Box sx={{ px: 3, pt: 3 }}>
+      <Box sx={{ px: 3, pt: 2 }}>
         <Box
           sx={{
             display: "flex",
@@ -64,21 +60,29 @@ export default function PlayerScreen() {
               </Typography>
             )}
           </Box>
-          <FavoriteButton performanceId={currentSong.performanceId} />
+          <Box sx={{ display: "flex", alignItems: "center" }}>
+            <FavoriteButton performanceId={currentSong.performanceId} />
+            <IconButton onClick={() => setTagManagerOpen(true)}>
+              <LabelIcon />
+            </IconButton>
+          </Box>
         </Box>
+        <TagManager
+          open={tagManagerOpen}
+          onClose={() => setTagManagerOpen(false)}
+          performanceId={currentSong.performanceId}
+        />
       </Box>
 
-      {/* コントロール — 残りスペースの中央に配置 */}
-      <Box
-        sx={{
-          flex: 1,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
+      {/* シークバー */}
+      <Box sx={{ px: 3, pt: 2 }}>
+        <SeekBar />
+      </Box>
+
+      {/* コントロール */}
+      <Box sx={{ px: 3, pt: 1 }}>
         <PlayerControls />
       </Box>
-    </Box>
+    </>
   );
 }

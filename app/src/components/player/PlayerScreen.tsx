@@ -53,7 +53,7 @@ export default function PlayerScreen() {
       }}
     >
       {/* 曲情報 */}
-      <Box sx={{ px: 3 }}>
+      <Box sx={{ px: 3, pt: 2 }}>
         <Box
           sx={{
             display: "flex",

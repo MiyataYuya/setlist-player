@@ -25,17 +25,19 @@
 |---|-------------|---------|
 | 1 | playSong(song, queue) | queue/currentIndex/isPlayingが正しくセットされる |
 | 2 | playSong(song) キューなし | queue=[song], currentIndex=0 |
-| 3 | playNext() 通常 | currentIndex が +1 される |
-| 4 | playNext() キュー末尾 + repeat=false | isPlaying=false になる |
-| 5 | playNext() キュー末尾 + repeat=true | currentIndex=0 に戻る |
-| 6 | playNext() shuffle=true | currentIndex がランダムに変わる |
-| 7 | playNext() 空キュー | 何も起きない |
-| 8 | playPrev() 通常 | currentIndex が -1 される |
-| 9 | playPrev() 先頭 | キュー末尾に戻る |
-| 10 | togglePlay() | isPlaying が反転する |
-| 11 | toggleShuffle() | isShuffle が反転する |
-| 12 | toggleRepeat() | isRepeat が反転する |
-| 13 | useCurrentSong() | currentIndex>=0 なら該当曲、-1 なら undefined |
+| 3 | playSong() 履歴追加 | historyStore.addToHistory が呼ばれる |
+| 4 | playNext() 通常 | currentIndex が +1 される |
+| 5 | playNext() キュー末尾 + repeat=false | isPlaying=false になる |
+| 6 | playNext() キュー末尾 + repeat=true | currentIndex=0 に戻る |
+| 7 | playNext() shuffle=true | currentIndex がランダムに変わる |
+| 8 | playNext() 空キュー | 何も起きない |
+| 9 | playPrev() 通常 | currentIndex が -1 される |
+| 10 | playPrev() 先頭 | キュー末尾に戻る |
+| 11 | togglePlay() | isPlaying が反転する |
+| 12 | toggleShuffle() | isShuffle が反転する |
+| 13 | toggleRepeat() | isRepeat が反転する |
+| 14 | useCurrentSong() | currentIndex>=0 なら該当曲、-1 なら undefined |
+| 15 | getPlayerRef() / setPlayerRef() | モジュールスコープでYouTube Player参照を管理 |
 
 ### 2.2 libraryStore (`stores/libraryStore.ts`)
 
@@ -47,7 +49,37 @@
 | 4 | setSearchQuery(q) | searchQuery が更新される |
 | 5 | localStorage永続化 | favoriteIds が localStorage に保存・復元される |
 
-### 2.3 useFilteredSongs (`hooks/useFilteredSongs.ts`)
+### 2.3 historyStore (`stores/historyStore.ts`)
+
+| # | テストケース | 確認内容 |
+|---|-------------|---------|
+| 1 | addToHistory(id) | 先頭に追加される |
+| 2 | addToHistory() 上限 | MAX_HISTORY(200)件を超えると古いものが削除される |
+| 3 | clearHistory() | 履歴が空になる |
+| 4 | localStorage永続化 | history が localStorage に保存・復元される |
+
+### 2.4 tagStore (`stores/tagStore.ts`)
+
+| # | テストケース | 確認内容 |
+|---|-------------|---------|
+| 1 | addTag(tag) | tags に追加される |
+| 2 | addTag() 重複 | 同じタグは追加されない |
+| 3 | removeTag(tag) | tags から削除、全songTagsからも削除される |
+| 4 | assignTag(performanceId, tag) | songTags[id] にタグが追加される |
+| 5 | unassignTag(performanceId, tag) | songTags[id] からタグが除去される |
+| 6 | localStorage永続化 | tags/songTags が localStorage に保存・復元される |
+
+### 2.5 playlistStore (`stores/playlistStore.ts`)
+
+| # | テストケース | 確認内容 |
+|---|-------------|---------|
+| 1 | createPlaylist(name) | 新しいプレイリストが作成される |
+| 2 | deletePlaylist(id) | プレイリストが削除される |
+| 3 | addToPlaylist(id, perfId) | 曲が追加される |
+| 4 | removeFromPlaylist(id, perfId) | 曲が除去される |
+| 5 | localStorage永続化 | プレイリストが localStorage に保存・復元される |
+
+### 2.6 useFilteredSongs (`hooks/useFilteredSongs.ts`)
 
 | # | テストケース | 確認内容 |
 |---|-------------|---------|
@@ -57,7 +89,7 @@
 | 4 | 大文字小文字 | "bump" で "BUMP OF CHICKEN" がヒット |
 | 5 | 一致なし | 空配列を返す |
 
-### 2.4 useDebouncedValue (`hooks/useDebouncedValue.ts`)
+### 2.7 useDebouncedValue (`hooks/useDebouncedValue.ts`)
 
 | # | テストケース | 確認内容 |
 |---|-------------|---------|
@@ -65,7 +97,7 @@
 | 2 | 遅延反映 | delayMs後に新しい値が反映される |
 | 3 | 連続更新 | 最後の値のみが反映される（中間値はスキップ） |
 
-### 2.5 useInfiniteScroll (`hooks/useInfiniteScroll.ts`)
+### 2.8 useInfiniteScroll (`hooks/useInfiniteScroll.ts`)
 
 | # | テストケース | 確認内容 |
 |---|-------------|---------|
@@ -73,7 +105,15 @@
 | 2 | hasMore | items数 > visibleCount なら true |
 | 3 | items変更時リセット | visibleCount が PAGE_SIZE に戻る |
 
-### 2.6 データ変換 (`data/songs.ts`)
+### 2.9 useAutoAdvance (`hooks/useAutoAdvance.ts`)
+
+| # | テストケース | 確認内容 |
+|---|-------------|---------|
+| 1 | endSeconds到達 | playNext() が呼ばれる |
+| 2 | 再生中のみ | isPlaying=false ではポーリングしない |
+| 3 | playerRef未設定 | エラーにならない |
+
+### 2.10 データ変換 (`data/songs.ts`)
 
 | # | テストケース | 確認内容 |
 |---|-------------|---------|
@@ -86,15 +126,6 @@
 | 7 | streams.title | Video データから title が設定される |
 | 8 | streams.songCount | グループ内のパフォーマンス数と一致する |
 | 9 | streams.viewCount/likeCount | Video データから数値が設定される |
-
-### 2.7 Vite CSVプラグイン (`vite.config.ts`)
-
-| # | テストケース | 確認内容 |
-|---|-------------|---------|
-| 1 | songs CSV → camelCase変換 | song_id → songId に変換される |
-| 2 | performances CSV → 数値変換 | startSeconds/endSeconds が number 型 |
-| 3 | videos CSV → camelCase変換 | video_id → videoId, view_count → viewCount (number) |
-| 4 | 空行フィルタ | ID が空の行は除外される |
 
 ---
 
@@ -167,7 +198,38 @@
 | 3 | シャッフルボタン | toggleShuffle が呼ばれる |
 | 4 | リピートボタン | toggleRepeat が呼ばれる |
 
-### 3.8 BottomNav (`components/layout/BottomNav.tsx`)
+### 3.8 SeekBar (`components/player/SeekBar.tsx`)
+
+| # | テストケース | 確認内容 |
+|---|-------------|---------|
+| 1 | 曲未選択 | 非表示 |
+| 2 | 時間表示 | 現在位置と曲の長さが "m:ss" 形式 |
+| 3 | スライダー操作 | ドラッグ中はポーリング停止、離すとseekTo呼び出し |
+| 4 | 曲変更時 | position が 0 にリセットされる |
+
+### 3.9 PlayerScreen (`components/player/PlayerScreen.tsx`)
+
+| # | テストケース | 確認内容 |
+|---|-------------|---------|
+| 1 | 曲未選択 | "曲を選択してください" 表示 |
+| 2 | 曲情報表示 | 曲名・アーティスト・日付が表示される |
+| 3 | グリップハンドル | タップでホーム("/")に遷移 |
+| 4 | お気に入り/タグボタン | 表示される |
+| 5 | キュー表示 | 次に再生される曲がリスト表示される |
+| 6 | キュー内の曲タップ | playSong が呼ばれてその曲にジャンプ |
+| 7 | キュー空 | キューセクションが非表示 |
+
+### 3.10 TagManager (`components/songs/TagManager.tsx`)
+
+| # | テストケース | 確認内容 |
+|---|-------------|---------|
+| 1 | タグ一覧表示 | 全タグがChipで表示される |
+| 2 | タグ割当済み | filled variant で表示 |
+| 3 | タグ未割当 | outlined variant で表示 |
+| 4 | タグクリック | assign/unassign が切り替わる |
+| 5 | 新しいタグ追加 | addTag + assignTag が呼ばれる |
+
+### 3.11 BottomNav (`components/layout/BottomNav.tsx`)
 
 | # | テストケース | 確認内容 |
 |---|-------------|---------|
@@ -190,6 +252,7 @@
 | 5 | 配信再生 | ▶ボタンで配信の最初の曲から再生開始 |
 | 6 | シャッフル再生 | shuffle=true になり、ランダムな曲が再生開始 |
 | 7 | カウント切替 | 曲モード: "N 曲"、配信モード: "N 配信" |
+| 8 | ソート | ソートメニューで並び順を変更できる |
 
 ### 4.2 SearchPage
 
@@ -206,6 +269,16 @@
 |---|-------------|---------|
 | 1 | お気に入り0件 | 空状態メッセージ表示 |
 | 2 | お気に入りあり | お気に入り曲のみ表示 |
+| 3 | 再生履歴表示 | 最近再生した曲が表示される |
+| 4 | プレイリスト表示 | 作成したプレイリストが表示される |
+
+### 4.4 PlayerScreen (ページレベル)
+
+| # | テストケース | 確認内容 |
+|---|-------------|---------|
+| 1 | 曲再生中の表示 | 動画・曲情報・シークバー・コントロール・キューが表示 |
+| 2 | キューからの曲選択 | タップで再生曲が切り替わる |
+| 3 | グリップハンドルで戻る | ホーム画面に遷移、再生は継続 |
 
 ---
 
@@ -222,6 +295,8 @@
 6. MiniPlayer をクリック → プレイヤー画面に遷移
 7. YouTube埋め込みプレイヤーが表示されることを確認
 8. 曲名・アーティスト・日付が表示されることを確認
+9. シークバーが表示され、時間が更新されることを確認
+10. キュー（次に再生）が表示されることを確認
 ```
 
 ### 5.2 配信モードの閲覧と再生
@@ -284,12 +359,41 @@
 6. /player 以外のページでも音声再生が継続することを確認
 ```
 
+### 5.8 再生画面のナビゲーション
+
+```
+1. 曲を再生してプレイヤー画面に遷移
+2. グリップハンドルをタップ → ホームに戻ることを確認
+3. 再生が継続していることを確認（MiniPlayerに曲名表示）
+4. MiniPlayerをタップ → 再度プレイヤー画面に遷移
+5. キュー内の曲をタップ → その曲に切り替わることを確認
+```
+
+### 5.9 タグ操作
+
+```
+1. プレイヤー画面でタグボタンをタップ
+2. タグ管理ダイアログが表示されることを確認
+3. 新しいタグを入力して追加
+4. タグが曲に割り当てられることを確認
+5. タグをタップで解除できることを確認
+```
+
+### 5.10 GitHub Pages SPA対応
+
+```
+1. プレイヤー画面でページをリロード
+2. 404にならず正しく表示されることを確認
+3. ホーム画面に直接アクセスできることを確認
+```
+
 ---
 
 ## 6. テスト優先度
 
 ### P0 (必須 — コア機能)
 - playerStore の playSong / playNext / playPrev
+- playerRef のモジュールスコープ管理（getPlayerRef/setPlayerRef）
 - libraryStore の toggleFavorite + localStorage永続化
 - データ結合ロジック（songs.ts の songPerformances, streams）
 - E2E: 曲の閲覧と再生
@@ -299,13 +403,19 @@
 - useFilteredSongs の検索フィルタ
 - useDebouncedValue のデバウンス動作
 - useInfiniteScroll の無限スクロール
+- useAutoAdvance の自動曲送り
+- SeekBar の再生位置表示・シーク操作
+- PlayerScreen のキュー表示・グリップハンドルナビゲーション
 - MiniPlayer の表示/非表示制御
 - StreamCard の展開/折りたたみ・タイトルクリーニング
-- E2E: 配信モード、検索して再生、お気に入り操作
+- E2E: 配信モード、検索して再生、お気に入り操作、再生画面ナビゲーション
 
 ### P2 (推奨 — 品質向上)
+- historyStore / tagStore / playlistStore の CRUD操作
+- TagManager のUI操作
 - 各コンポーネントの表示テスト
 - シャッフル/リピートの境界ケース
 - BottomNav のルーティング
 - Vite CSVプラグインの変換（songs, performances, videos）
 - SearchBar のデバウンス統合テスト
+- E2E: タグ操作、GitHub Pages SPA対応

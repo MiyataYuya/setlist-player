@@ -61,10 +61,9 @@ describe("SongCard", () => {
     expect(state.queue).toBe(queue);
   });
 
-  // #5 FavoriteButton present
-  it("renders FavoriteButton", () => {
+  // #5 menu button present
+  it("renders menu button", () => {
     renderWithProviders(<SongCard song={song} queue={queue} />);
-    // FavoriteButton renders FavoriteBorderIcon when not favorited
-    expect(screen.getByTestId("FavoriteBorderIcon")).toBeInTheDocument();
+    expect(screen.getByTestId("MoreVertIcon")).toBeInTheDocument();
   });
 });

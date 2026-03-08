@@ -19,5 +19,4 @@ app/test-results/
 .playwright-mcp/
 
 # Intermediate data
-data/app_songs_enriched.csv
 data/enrichment_log.json

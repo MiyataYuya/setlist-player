@@ -36,7 +36,7 @@ export default function HomePage() {
           シャッフル再生
         </Button>
       </Box>
-      <SongList songs={songPerformances.slice(0, 50)} />
+      <SongList songs={songPerformances} />
     </Box>
   );
 }

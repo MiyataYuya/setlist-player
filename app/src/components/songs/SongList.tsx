@@ -2,6 +2,7 @@ import List from "@mui/material/List";
 import Typography from "@mui/material/Typography";
 import Box from "@mui/material/Box";
 import SongCard from "./SongCard";
+import { useInfiniteScroll } from "../../hooks/useInfiniteScroll";
 import type { SongPerformance } from "../../data/types";
 
 interface Props {
@@ -9,6 +10,8 @@ interface Props {
 }
 
 export default function SongList({ songs }: Props) {
+  const { visibleItems, hasMore, sentinelRef } = useInfiniteScroll(songs);
+
   if (songs.length === 0) {
     return (
       <Box sx={{ p: 3, textAlign: "center" }}>
@@ -18,10 +21,13 @@ export default function SongList({ songs }: Props) {
   }
 
   return (
-    <List disablePadding>
-      {songs.map((song) => (
-        <SongCard key={song.performanceId} song={song} queue={songs} />
-      ))}
-    </List>
+    <>
+      <List disablePadding>
+        {visibleItems.map((song) => (
+          <SongCard key={song.performanceId} song={song} queue={songs} />
+        ))}
+      </List>
+      {hasMore && <div ref={sentinelRef} style={{ height: 1 }} />}
+    </>
   );
 }

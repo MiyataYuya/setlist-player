@@ -11,6 +11,8 @@ import PlaylistPage from "./pages/PlaylistPage";
 import YouTubeEmbed from "./components/player/YouTubeEmbed";
 import { useCurrentSong, usePlayerStore } from "./stores/playerStore";
 import { useIsDesktop } from "./hooks/useIsDesktop";
+import ResizeHandle from "./components/layout/ResizeHandle";
+import { useLayoutStore } from "./stores/layoutStore";
 import { useState, useEffect, useRef } from "react";
 import type { ReactNode } from "react";
 
@@ -45,6 +47,7 @@ function AppContent() {
   const currentSong = useCurrentSong();
   const isPlayerOpen = usePlayerStore((s) => s.isPlayerOpen);
   const isDesktop = useIsDesktop();
+  const playerPaneWidth = useLayoutStore((s) => s.playerPaneWidth);
   const historyEntryPushedRef = useRef(false);
 
   // ブラウザバックで再生画面を閉じる（モバイルのオーバーレイのみ）。
@@ -100,12 +103,14 @@ function AppContent() {
         </FadeRoutes>
       </Box>
 
+      {isDesktop && <ResizeHandle />}
+
       {showPlayerPane && (
         <Box
           sx={
             isDesktop
               ? {
-                  width: 360,
+                  width: playerPaneWidth,
                   flexShrink: 0,
                   height: "100vh",
                   borderLeft: "1px solid",

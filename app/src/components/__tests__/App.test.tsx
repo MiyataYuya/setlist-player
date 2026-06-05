@@ -42,6 +42,18 @@ describe("App responsive shell", () => {
     expect(screen.getByText("曲を選択してください")).toBeInTheDocument();
   });
 
+  it("shows the resize handle on desktop", () => {
+    setMatchMedia(true);
+    renderApp();
+    expect(screen.getByRole("separator")).toBeInTheDocument();
+  });
+
+  it("does not show the resize handle on mobile", () => {
+    setMatchMedia(false);
+    renderApp();
+    expect(screen.queryByRole("separator")).not.toBeInTheDocument();
+  });
+
   it("pushes at most one history entry per player-open session on mobile", async () => {
     setMatchMedia(false);
     const pushSpy = vi.spyOn(window.history, "pushState");

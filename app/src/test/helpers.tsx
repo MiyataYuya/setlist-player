@@ -38,7 +38,7 @@ export function renderWithRoute(ui: ReactElement, initialEntries: string[]) {
  * isDesktop=true なら min-width 系クエリ（lg以上）を true にする。
  */
 export function setMatchMedia(isDesktop: boolean) {
-  Object.defineProperty(window, "matchMedia", {
+  Object.defineProperty(globalThis, "matchMedia", {
     writable: true,
     value: (query: string) => ({
       matches: isDesktop && query.includes("min-width"),

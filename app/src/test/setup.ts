@@ -1,4 +1,5 @@
 import "@testing-library/jest-dom/vitest";
+import { afterEach } from "vitest";
 
 // Mock IntersectionObserver
 class MockIntersectionObserver {
@@ -54,17 +55,28 @@ const localStorageMock = (() => {
 Object.defineProperty(globalThis, "localStorage", { value: localStorageMock });
 
 // Mock matchMedia（デフォルトは「マッチしない」= モバイル幅扱い）
-// テストごとに helpers の setMatchMedia() で上書きする。
-Object.defineProperty(globalThis, "matchMedia", {
-  writable: true,
-  value: (query: string) => ({
-    matches: false,
-    media: query,
-    onchange: null,
-    addEventListener: () => {},
-    removeEventListener: () => {},
-    addListener: () => {},
-    removeListener: () => {},
-    dispatchEvent: () => false,
-  }),
+// テストごとに helpers の setMatchMedia() で上書きできるが、
+// afterEach でこのモバイルデフォルトへ戻すことでテスト間の状態リークを防ぐ。
+const mobileMatchMedia = (query: string) => ({
+  matches: false,
+  media: query,
+  onchange: null,
+  addEventListener: () => {},
+  removeEventListener: () => {},
+  addListener: () => {},
+  removeListener: () => {},
+  dispatchEvent: () => false,
+});
+
+function applyMobileMatchMedia() {
+  Object.defineProperty(globalThis, "matchMedia", {
+    writable: true,
+    value: mobileMatchMedia,
+  });
+}
+
+applyMobileMatchMedia();
+
+afterEach(() => {
+  applyMobileMatchMedia();
 });

@@ -15,6 +15,7 @@
 - 旧パイプライン (`fetch_setlists.py` → `parse_setlists.py` → `build_app_data.py` → `enrich_songs.py`) は当面残置するが、アプリ用 CSV の生成元としては不使用
 - 公開用 `data/song_performances.csv` もシートから直接生成するよう変更（`build_from_sheet.py` が `video_url` 付き・`HH:MM:SS` 形式で出力）
 - README / `data/README.md` を新パイプライン構成に合わせて全面更新
+- データソースが有志の方が公開している非公式 Google スプレッドシートであることを README に明記、シートへのリンクと管理者の方への謝辞・利用停止対応の方針を追加
 
 ### Removed
 - 旧パイプラインの中間ファイル `data/songs.csv` を削除（再生回数は `app_performances.csv` から導出可能）

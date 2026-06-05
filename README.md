@@ -1,8 +1,8 @@
 # セトリプレイヤー
 
-YouTubeの歌枠配信アーカイブから、手動キュレーションされたセットリスト（セトリ）情報をもとに曲単位で再生できるWebアプリです。
+YouTubeの歌枠配信アーカイブから、有志の方が管理しているセットリスト（セトリ）情報をもとに曲単位で再生できるWebアプリです。
 
-[ミナミイズミ (@IZUMIMINAMI)](https://www.youtube.com/@IZUMIMINAMI) さんの配信アーカイブからセトリを作りたかったのがきっかけで開発しました。曲名・アーティスト・歌唱位置（タイムスタンプ付きURL）を Google スプレッドシートで管理し、それを構造化データに変換してアプリに取り込みます。
+[ミナミイズミ (@IZUMIMINAMI)](https://www.youtube.com/@IZUMIMINAMI) さんの配信アーカイブからセトリを作りたかったのがきっかけで開発しました。セトリ情報は有志の方が公開している [Googleスプレッドシート（非公式）](https://docs.google.com/spreadsheets/d/1rZfXp7j8Qh_gAhWuIEgGBt9Z_Pbn0QXoCLExQc6OrNI/) を参照させていただき、構造化データに変換してアプリに取り込んでいます。データを公開してくださっている管理者の方に感謝いたします。
 
 **Webアプリ:** https://miyatayuya.github.io/setlist-player/
 
@@ -22,8 +22,10 @@ YouTubeの歌枠配信アーカイブから、手動キュレーションされ�
 
 | データ | 取得元 | 方法 |
 |---|---|---|
-| セトリ（曲名・アーティスト・タイムスタンプ） | 手動キュレーションされた Google スプレッドシート | シートの URL 列に埋め込まれた `youtube.com/watch?v=...&t=Ns` リンクから `video_id` と開始秒数を抽出 |
+| セトリ（曲名・アーティスト・タイムスタンプ） | [有志の方が公開している Googleスプレッドシート（非公式）](https://docs.google.com/spreadsheets/d/1rZfXp7j8Qh_gAhWuIEgGBt9Z_Pbn0QXoCLExQc6OrNI/) | シートの URL 列に埋め込まれた `youtube.com/watch?v=...&t=Ns` リンクから `video_id` と開始秒数を抽出 |
 | 動画メタデータ（タイトル・公開日等） | YouTube Data API v3 | 公式APIによる取得 |
+
+> このスプレッドシートは本プロジェクトとは独立して、有志の方が管理されているものです。シートの管理者の方からの公開停止・利用停止のご要望があった場合は、速やかにアプリからの参照を停止します。
 
 独自の解析（音声認識・歌詞照合等）は行っていません。
 

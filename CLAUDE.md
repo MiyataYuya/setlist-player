@@ -104,9 +104,13 @@ CSVファイル → Viteカスタムプラグイン（ビルド時パース） �
 
 ルートは4つ: `/` (Home), `/search`, `/library`, `/playlist/:id` (`App.tsx`)
 
-再生画面 `PlayerScreen` は**ルートではなく**、`playerStore.isPlayerOpen` で制御するフルスクリーンオーバーレイ（`translateY` でスライド）。
+再生画面の中身は `PlayerBody`（`variant: "overlay" | "panel"`）。**ルートではない**。モバイルでは `playerStore.isPlayerOpen` で制御するフルスクリーンオーバーレイ（`translateY` でスライド、`variant="overlay"`）、PCでは右カラムに常設（`variant="panel"`）。
 
-レイアウト: `BottomNav`(常時表示) + `MiniPlayer`(再生中バー。`currentSong` が無い or `isPlayerOpen` のとき非表示)
+モバイルのレイアウト: `BottomNav` + `MiniPlayer`(再生中バー。`currentSong` が無い or `isPlayerOpen` のとき非表示)。どちらも PC では非表示。
+
+### レスポンシブ
+
+`useIsDesktop()`（`lg` ≈ 1200px以上）で PC 幅を判定。PCでは `App.tsx` が `SideNav`（左）＋一覧（中央スクロール）＋プレイヤーペイン（右常設）の2ペインを表示し、`BottomNav`/`MiniPlayer` は非表示。モバイルは下部ナビ＋スライド式オーバーレイ。`isPlayerOpen` とブラウザバックで閉じる挙動はモバイル専用。`YouTubeEmbed` は `App.tsx` 内に**単一マウント**（兄弟要素の配置を `sx` で出し分けるだけ）で、幅がしきい値をまたいでも再生が途切れない。E2E はモバイルレイアウト前提のため Playwright は 414px 固定（`playwright.config.ts`）。
 
 ### UIスタイリング
 

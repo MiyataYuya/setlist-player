@@ -14,7 +14,11 @@ import FavoriteButton from "../common/FavoriteButton";
 import TagManager from "../songs/TagManager";
 import { usePlayerStore, useCurrentSong } from "../../stores/playerStore";
 
-export default function PlayerScreen() {
+interface PlayerBodyProps {
+  variant: "overlay" | "panel";
+}
+
+export default function PlayerBody({ variant }: PlayerBodyProps) {
   const currentSong = useCurrentSong();
   const queue = usePlayerStore((s) => s.queue);
   const currentIndex = usePlayerStore((s) => s.currentIndex);
@@ -34,12 +38,11 @@ export default function PlayerScreen() {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          height: "80vh",
+          flex: 1,
+          minHeight: variant === "panel" ? 200 : "80vh",
         }}
       >
-        <Typography color="text.secondary">
-          曲を選択してください
-        </Typography>
+        <Typography color="text.secondary">曲を選択してください</Typography>
       </Box>
     );
   }
@@ -58,16 +61,21 @@ export default function PlayerScreen() {
         overscrollBehavior: "none",
       }}
     >
-      {/* 閉じるボタン */}
-      <IconButton
-        onClick={() => window.history.back()}
-        sx={{ alignSelf: "flex-start", ml: 1, mt: 0.5 }}
-      >
-        <KeyboardArrowDownIcon />
-      </IconButton>
+      {/* 閉じるボタン（overlay のみ） */}
+      {variant === "overlay" && (
+        /* モバイルoverlay用の閉じるボタン。App.tsx の popstate ハンドラが
+           history.back() を受けて isPlayerOpen を false にする（暗黙の依存）。 */
+        <IconButton
+          data-testid="player-close"
+          onClick={() => window.history.back()}
+          sx={{ alignSelf: "flex-start", ml: 1, mt: 0.5 }}
+        >
+          <KeyboardArrowDownIcon />
+        </IconButton>
+      )}
 
       {/* 曲情報 */}
-      <Box sx={{ px: 3 }}>
+      <Box sx={{ px: 3, pt: variant === "panel" ? 2 : 0 }}>
         <Box
           sx={{
             display: "flex",

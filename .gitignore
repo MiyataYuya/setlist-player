@@ -24,3 +24,8 @@ data/*.bak
 
 # Sheet input (binary, downloaded on demand)
 scraper/sheet_source.xlsx
+
+# Brainstorming visual-companion working files
+.superpowers/
+# Playwright MCP scratch output
+app/.playwright-mcp/

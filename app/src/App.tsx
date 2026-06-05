@@ -45,11 +45,19 @@ function AppContent() {
   const currentSong = useCurrentSong();
   const isPlayerOpen = usePlayerStore((s) => s.isPlayerOpen);
   const isDesktop = useIsDesktop();
+  const historyEntryPushedRef = useRef(false);
 
-  // ブラウザバックで再生画面を閉じる（モバイルのオーバーレイのみ）
+  // ブラウザバックで再生画面を閉じる（モバイルのオーバーレイのみ）。
+  // isPlayerOpen はストアに永続するため、ブレークポイント往復で本effectが再発火しても
+  // 1つの「開セッション」につき pushState は1回だけにする（重複履歴エントリ防止）。
   useEffect(() => {
     if (isPlayerOpen && !isDesktop) {
-      window.history.pushState({ playerOpen: true }, "");
+      if (!historyEntryPushedRef.current) {
+        window.history.pushState({ playerOpen: true }, "");
+        historyEntryPushedRef.current = true;
+      }
+    } else if (!isPlayerOpen) {
+      historyEntryPushedRef.current = false;
     }
   }, [isPlayerOpen, isDesktop]);
 

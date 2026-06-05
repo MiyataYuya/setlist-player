@@ -20,6 +20,7 @@ export default function ResizeHandle() {
   const handlePointerDown = (e: ReactPointerEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.currentTarget.setPointerCapture(e.pointerId);
+    document.body.style.userSelect = "none";
   };
 
   const handlePointerMove = (e: ReactPointerEvent<HTMLDivElement>) => {
@@ -31,8 +32,18 @@ export default function ResizeHandle() {
     if (e.currentTarget.hasPointerCapture(e.pointerId)) {
       e.currentTarget.releasePointerCapture(e.pointerId);
     }
+    document.body.style.userSelect = "";
   };
 
+  const handlePointerCancel = (e: ReactPointerEvent<HTMLDivElement>) => {
+    if (e.currentTarget.hasPointerCapture(e.pointerId)) {
+      e.currentTarget.releasePointerCapture(e.pointerId);
+    }
+    document.body.style.userSelect = "";
+  };
+
+  // キー方向: ArrowLeft=右ペイン拡大(width+), ArrowRight=縮小(width-)。
+  // aria-valuenow は右ペイン幅(px)。視覚マッピング（ハンドルを左へ＝右ペイン拡大）を優先した設計。
   const handleKeyDown = (e: ReactKeyboardEvent<HTMLDivElement>) => {
     switch (e.key) {
       case "ArrowLeft":
@@ -60,12 +71,14 @@ export default function ResizeHandle() {
       aria-orientation="vertical"
       aria-label="プレイヤー幅の調整"
       aria-valuenow={width}
+      aria-valuetext={`${width}px`}
       aria-valuemin={MIN_PLAYER_PANE_WIDTH}
       aria-valuemax={MAX_PLAYER_PANE_WIDTH}
       tabIndex={0}
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
+      onPointerCancel={handlePointerCancel}
       onKeyDown={handleKeyDown}
       sx={{
         flexShrink: 0,

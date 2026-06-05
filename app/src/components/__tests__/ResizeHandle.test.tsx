@@ -10,9 +10,10 @@ import {
 
 // jsdom は Pointer Capture API を実装していないためスタブ
 beforeEach(() => {
-  Element.prototype.setPointerCapture = () => {};
-  Element.prototype.releasePointerCapture = () => {};
-  Element.prototype.hasPointerCapture = () => true;
+  const captured = new Set<number>();
+  Element.prototype.setPointerCapture = function (id: number) { captured.add(id); };
+  Element.prototype.releasePointerCapture = function (id: number) { captured.delete(id); };
+  Element.prototype.hasPointerCapture = function (id: number) { return captured.has(id); };
   useLayoutStore.setState({ playerPaneWidth: 360 });
 });
 
@@ -60,5 +61,13 @@ describe("ResizeHandle", () => {
     fireEvent.pointerDown(handle, { pointerId: 1, clientX: 700 });
     fireEvent.pointerMove(handle, { pointerId: 1, clientX: 0 }); // 幅1024 → MAXにクランプ
     expect(useLayoutStore.getState().playerPaneWidth).toBe(MAX_PLAYER_PANE_WIDTH);
+  });
+
+  it("ignores pointer move when no drag is in progress", () => {
+    renderWithProviders(<ResizeHandle />);
+    const handle = screen.getByRole("separator");
+    // pointerDown を呼ばずに move しても幅は変わらない
+    fireEvent.pointerMove(handle, { pointerId: 1, clientX: 100 });
+    expect(useLayoutStore.getState().playerPaneWidth).toBe(360);
   });
 });

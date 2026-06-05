@@ -103,7 +103,7 @@ function AppContent() {
         </FadeRoutes>
       </Box>
 
-      {isDesktop && <ResizeHandle />}
+      {isDesktop && showPlayerPane && <ResizeHandle />}
 
       {showPlayerPane && (
         <Box
@@ -113,8 +113,6 @@ function AppContent() {
                   width: playerPaneWidth,
                   flexShrink: 0,
                   height: "100vh",
-                  borderLeft: "1px solid",
-                  borderColor: "divider",
                   bgcolor: "background.default",
                   display: "flex",
                   flexDirection: "column",

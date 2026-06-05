@@ -63,6 +63,15 @@ describe("ResizeHandle", () => {
     expect(useLayoutStore.getState().playerPaneWidth).toBe(MAX_PLAYER_PANE_WIDTH);
   });
 
+  it("restores body userSelect on pointer cancel", () => {
+    renderWithProviders(<ResizeHandle />);
+    const handle = screen.getByRole("separator");
+    fireEvent.pointerDown(handle, { pointerId: 1, clientX: 700 });
+    expect(document.body.style.userSelect).toBe("none");
+    fireEvent.pointerCancel(handle, { pointerId: 1 });
+    expect(document.body.style.userSelect).toBe("");
+  });
+
   it("ignores pointer move when no drag is in progress", () => {
     renderWithProviders(<ResizeHandle />);
     const handle = screen.getByRole("separator");

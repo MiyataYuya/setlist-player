@@ -5,6 +5,7 @@ import { screen, setMatchMedia, act } from "../../test/helpers";
 import theme from "../../theme";
 import App from "../../App";
 import { usePlayerStore } from "../../stores/playerStore";
+import { useLayoutStore } from "../../stores/layoutStore";
 import { songPerformances } from "../../data/songs";
 
 function renderApp() {
@@ -18,6 +19,7 @@ function renderApp() {
 describe("App responsive shell", () => {
   afterEach(() => {
     usePlayerStore.setState({ queue: [], currentIndex: -1, isPlayerOpen: false });
+    useLayoutStore.setState({ playerPaneWidth: 360 });
   });
 
   it("shows SideNav and hides BottomNav on desktop", () => {
@@ -52,6 +54,13 @@ describe("App responsive shell", () => {
     setMatchMedia(false);
     renderApp();
     expect(screen.queryByRole("separator")).not.toBeInTheDocument();
+  });
+
+  it("reflects the layout store width on the desktop resize handle", () => {
+    setMatchMedia(true);
+    useLayoutStore.setState({ playerPaneWidth: 500 });
+    renderApp();
+    expect(screen.getByRole("separator")).toHaveAttribute("aria-valuenow", "500");
   });
 
   it("pushes at most one history entry per player-open session on mobile", async () => {

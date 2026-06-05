@@ -39,6 +39,8 @@ OUT_SONGS = os.path.join(_DATA_DIR, "app_songs.csv")
 OUT_SONGS_ENRICHED = os.path.join(_DATA_DIR, "app_songs_enriched.csv")
 OUT_PERFORMANCES = os.path.join(_DATA_DIR, "app_performances.csv")
 OUT_VIDEOS = os.path.join(_DATA_DIR, "app_videos.csv")
+# 公開用 CSV (README からリンク、人間可読フォーマット)
+OUT_PUBLIC_PERFORMANCES = os.path.join(_DATA_DIR, "song_performances.csv")
 
 # シート列のインデックス (1-origin)
 COL_DATE = 1
@@ -54,6 +56,14 @@ DATA_START_ROW = 6
 
 URL_RE = re.compile(r"(?:youtu\.be/|watch\?v=)([\w-]{11})(?:.*?[?&]t=(\d+)s?)?")
 END_SECONDS_FALLBACK = 300  # 動画末尾曲の end 補完: start + 5分
+
+
+def _seconds_to_hms(sec: int) -> str:
+    """秒数を HH:MM:SS 形式に変換。"""
+    sec = max(0, int(sec))
+    h, rem = divmod(sec, 3600)
+    m, s = divmod(rem, 60)
+    return f"{h:02d}:{m:02d}:{s:02d}"
 
 
 def extract_sheet_rows(xlsx_path: str) -> list[dict]:
@@ -281,11 +291,32 @@ def build(xlsx_path: str) -> None:
             row.update(cache.get(vid, {k: "" for k in VIDEO_FIELDS}))
             w.writerow(row)
 
+    # 公開用CSV: song_performances.csv (HH:MM:SS フォーマット、video_url 付き)
+    song_by_id = {s["song_id"]: s for s in songs}
+    with open(OUT_PUBLIC_PERFORMANCES, "w", newline="", encoding="utf-8") as f:
+        w = csv.DictWriter(f, fieldnames=[
+            "song_name", "artist", "video_id", "video_url",
+            "published_at", "start_time", "end_time",
+        ])
+        w.writeheader()
+        for p in perfs:
+            s = song_by_id[p["song_id"]]
+            w.writerow({
+                "song_name": s["title"],
+                "artist": s["artist"],
+                "video_id": p["video_id"],
+                "video_url": f"https://youtu.be/{p['video_id']}?t={p['start_seconds']}",
+                "published_at": p["published_at"],
+                "start_time": _seconds_to_hms(p["start_seconds"]),
+                "end_time": _seconds_to_hms(p["end_seconds"]),
+            })
+
     print()
     print(f"Songs:        {len(songs):4d} -> {OUT_SONGS}")
     print(f"Songs(enrich):{len(songs):4d} -> {OUT_SONGS_ENRICHED}")
     print(f"Performances: {len(perfs):4d} -> {OUT_PERFORMANCES}")
     print(f"Videos:       {len(video_ids):4d} -> {OUT_VIDEOS}")
+    print(f"Public CSV:   {len(perfs):4d} -> {OUT_PUBLIC_PERFORMANCES}")
 
 
 def main() -> None:

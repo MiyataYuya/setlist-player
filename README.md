@@ -6,6 +6,8 @@ YouTubeの歌枠配信のコメント欄からセットリスト（セトリ）�
 
 **Webアプリ:** https://miyatayuya.github.io/setlist-player/
 
+**変更履歴:** [CHANGELOG.md](CHANGELOG.md)
+
 ## データの取り扱いについて
 
 本プロジェクトは配信者の権利を尊重し、以下の方針でデータを取り扱っています。

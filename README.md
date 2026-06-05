@@ -1,8 +1,8 @@
 # セトリプレイヤー
 
-YouTubeの歌枠配信アーカイブから、有志の方が管理しているセットリスト（セトリ）情報をもとに曲単位で再生できるWebアプリです。
+YouTubeの歌枠配信アーカイブから、有志の方が管理しているCSVをもとに曲単位で再生できるWebアプリです。
 
-[ミナミイズミ (@IZUMIMINAMI)](https://www.youtube.com/@IZUMIMINAMI) さんの配信アーカイブからセトリを作りたかったのがきっかけで開発しました。セトリ情報は有志の方が公開している [Googleスプレッドシート（非公式）](https://docs.google.com/spreadsheets/d/1rZfXp7j8Qh_gAhWuIEgGBt9Z_Pbn0QXoCLExQc6OrNI/) を参照させていただき、構造化データに変換してアプリに取り込んでいます。データを公開してくださっている管理者の方に感謝いたします。
+[ミナミイズミ (@IZUMIMINAMI)](https://www.youtube.com/@IZUMIMINAMI) さんの配信アーカイブからプレイリストを作りたかったのがきっかけで開発しました。セトリ情報は有志の方が公開している [Googleスプレッドシート（非公式）](https://docs.google.com/spreadsheets/d/1rZfXp7j8Qh_gAhWuIEgGBt9Z_Pbn0QXoCLExQc6OrNI/) を参照させていただき、構造化データに変換してアプリに取り込んでいます。データを公開してくださっている管理者の方に感謝いたします。
 
 **Webアプリ:** https://miyatayuya.github.io/setlist-player/
 

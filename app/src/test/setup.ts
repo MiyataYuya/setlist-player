@@ -80,3 +80,6 @@ applyMobileMatchMedia();
 afterEach(() => {
   applyMobileMatchMedia();
 });
+
+// jsdom は scrollIntoView を実装していないためスタブ
+Element.prototype.scrollIntoView = () => {};

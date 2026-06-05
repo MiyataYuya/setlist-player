@@ -1,5 +1,5 @@
-import { describe, it, expect, beforeEach } from "vitest";
-import { renderWithProviders, screen } from "../../test/helpers";
+import { describe, it, expect, beforeEach, vi } from "vitest";
+import { renderWithProviders, screen, userEvent } from "../../test/helpers";
 import PlayerBody from "../player/PlayerBody";
 import { usePlayerStore } from "../../stores/playerStore";
 import { songPerformances } from "../../data/songs";
@@ -8,8 +8,6 @@ const sample = songPerformances[0];
 
 describe("PlayerBody", () => {
   beforeEach(() => {
-    // jsdom は scrollIntoView を実装していないためスタブする
-    Element.prototype.scrollIntoView = () => {};
     usePlayerStore.getState().playSong(sample, [sample]);
   });
 
@@ -29,5 +27,14 @@ describe("PlayerBody", () => {
   it("does not show a close button in panel variant", () => {
     renderWithProviders(<PlayerBody variant="panel" />);
     expect(screen.queryByTestId("player-close")).not.toBeInTheDocument();
+  });
+
+  it("calls window.history.back when the close button is clicked", async () => {
+    const backSpy = vi.spyOn(window.history, "back").mockImplementation(() => {});
+    const user = userEvent.setup();
+    renderWithProviders(<PlayerBody variant="overlay" />);
+    await user.click(screen.getByTestId("player-close"));
+    expect(backSpy).toHaveBeenCalledOnce();
+    backSpy.mockRestore();
   });
 });

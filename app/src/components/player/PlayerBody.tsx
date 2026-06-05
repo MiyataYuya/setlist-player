@@ -63,6 +63,8 @@ export default function PlayerBody({ variant }: PlayerBodyProps) {
     >
       {/* 閉じるボタン（overlay のみ） */}
       {variant === "overlay" && (
+        /* モバイルoverlay用の閉じるボタン。App.tsx の popstate ハンドラが
+           history.back() を受けて isPlayerOpen を false にする（暗黙の依存）。 */
         <IconButton
           data-testid="player-close"
           onClick={() => window.history.back()}

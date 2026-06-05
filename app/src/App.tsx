@@ -12,8 +12,9 @@ import YouTubeEmbed from "./components/player/YouTubeEmbed";
 import { useCurrentSong, usePlayerStore } from "./stores/playerStore";
 import { useIsDesktop } from "./hooks/useIsDesktop";
 import { useState, useEffect, useRef } from "react";
+import type { ReactNode } from "react";
 
-function FadeRoutes({ children }: { children: React.ReactNode }) {
+function FadeRoutes({ children }: { children: ReactNode }) {
   const location = useLocation();
   const [fadeIn, setFadeIn] = useState(true);
   const prevPathRef = useRef(location.pathname);
@@ -53,6 +54,7 @@ function AppContent() {
   }, [isPlayerOpen, isDesktop]);
 
   useEffect(() => {
+    if (isDesktop) return; // デスクトップはpopstateでclosePlayerしない（オーバーレイがないため）
     const handlePopState = () => {
       if (usePlayerStore.getState().isPlayerOpen) {
         usePlayerStore.getState().closePlayer();
@@ -60,7 +62,7 @@ function AppContent() {
     };
     window.addEventListener("popstate", handlePopState);
     return () => window.removeEventListener("popstate", handlePopState);
-  }, []);
+  }, [isDesktop]);
 
   // PCでは右カラムを常設（曲未選択でも枠を出す）。モバイルでは曲がある時だけオーバーレイをマウント。
   const showPlayerPane = isDesktop || currentSong != null;

@@ -22,21 +22,22 @@ YouTubeの歌枠配信のコメント欄からセットリスト（セトリ）�
 
 | データ | 取得元 | 方法 |
 |---|---|---|
-| セトリ（曲名・タイムスタンプ） | YouTube動画のコメント欄 | 視聴者が公開コメントとして投稿したセトリを YouTube Data API v3 で取得 |
+| セトリ（曲名・アーティスト・タイムスタンプ） | 手動キュレーションされた Google スプレッドシート | シートの URL 列に埋め込まれた `youtube.com/watch?v=...&t=Ns` リンクから `video_id` と開始秒数を抽出 |
 | 動画メタデータ（タイトル・公開日等） | YouTube Data API v3 | 公式APIによる取得 |
-| アーティスト名の補完 | [MusicBrainz](https://musicbrainz.org/) | 曲名をキーにオープンな音楽データベースを検索 |
 
 独自の解析（音声認識・歌詞照合等）は行っていません。
 
 ### データの正確性について
 
-本アプリに表示される曲名・アーティスト名などの情報は、コメントの自動パースやデータベースとの自動マッチングによって生成されているため、**誤りを含む可能性があります**。特に以下のケースで不正確になることがあります。
+曲名・アーティスト名・タイムスタンプは手動キュレーションされたシートを「正」として取り込んでいるため、コメント解析時代に発生していた以下の誤りは原則発生しません。
 
-- コメント投稿者の記載ミスがそのまま反映される
-- パース処理で曲名の区切りを誤認する
-- MusicBrainzでの自動マッチングで別の同名曲のアーティストが紐づく
+- 投稿者の記載ミス
+- パース処理での曲名区切りの誤認
+- 自動マッチングによる別の同名曲のアーティストとの混同
 
-表示内容の正確性は保証されません。誤りに気づいた場合は Issue でご報告いただけると助かります。
+それでも転記ミスや表記揺れが残る可能性はあります。誤りに気づいた場合は Issue でご報告いただけると助かります。
+
+なお、配信者の権利保護として、YouTube から削除/非公開になった動画は API でタイトルが取得できないため、関連する曲データごと自動的にアプリから除外されます（[`scraper/build_from_sheet.py`](scraper/build_from_sheet.py)）。
 
 ### 保存するデータの範囲
 
@@ -79,65 +80,44 @@ docs/      仕様書・設計ドキュメント
 
 ## データパイプライン
 
+セトリ情報の正は Google スプレッドシートで手動キュレーションされています。`scraper/build_from_sheet.py` がシート（XLSX）のハイパーリンクから `video_id` と開始秒数を抽出し、アプリ用 CSV と公開用 CSV をすべて生成します。
+
 ```bash
 cd scraper
 uv sync
 export YOUTUBE_API_KEY="YOUR_API_KEY"
 ```
 
-### 1. セトリコメントの取得
+### 1. シートのダウンロード
 
 ```bash
-uv run fetch_setlists.py
+curl -sL "https://docs.google.com/spreadsheets/d/<SHEET_ID>/export?format=xlsx" \
+  -o scraper/sheet_source.xlsx
 ```
 
-`playlists.txt` に記載されたプレイリスト内の各動画のコメントを走査し、セトリコメントを `setlists_raw.json` に保存します。増分更新対応。
+`sheet_source.xlsx` はバイナリで頻繁に更新されるため `.gitignore` 済み。実行のたびに最新を取得してください。
 
-### 2. 曲名のパース
+### 2. CSV の生成
 
 ```bash
-uv run parse_setlists.py
+uv run build_from_sheet.py
 ```
 
-セトリコメントをパースし、`data/song_performances.csv` と `data/songs.csv` を出力します。
-
-### 3. アプリ用データの生成
-
-```bash
-uv run build_app_data.py
-```
-
-タイムスタンプの秒数変換、曲名の表記揺れ統一、ID採番などを行い、以下のファイルを `data/` に出力します。
+シートから抽出した `(video_id, start_seconds, 曲名, アーティスト)` をもとに、以下のファイルを `data/` に出力します。
 
 | ファイル | 内容 |
 |---|---|
-| `app_songs.csv` | 曲マスタ（song_id, title, artist） |
-| `app_performances.csv` | パフォーマンス（performance_id, song_id, video_id, start_seconds, end_seconds） |
-| `app_videos.csv` | 動画情報（video_id, title, duration, view_count 等） |
+| `app_songs.csv` | 曲マスタ（`song_id`, `title`, `artist`） |
+| `app_songs_enriched.csv` | アプリが読む曲マスタ（上記に `performance_note` 列を加えた互換スキーマ） |
+| `app_performances.csv` | パフォーマンス（`performance_id`, `song_id`, `video_id`, `start_seconds`, `end_seconds`, `published_at`） |
+| `app_videos.csv` | 動画情報（YouTube Data API v3 から取得・キャッシュ） |
+| `song_performances.csv` | 公開用CSV（人間可読の `HH:MM:SS`、`video_url` 付き） |
 
-### 4. アーティスト名の補完・正規化
+動画末尾の曲の `end_seconds` は「同じ動画内の次曲の `start_seconds`」で自動補完し、最終曲のみ `+300秒` をフォールバックとします。
 
-```bash
-uv run enrich_songs.py
-```
+### 旧パイプライン（参考）
 
-`app_songs.csv` を入力として、以下の処理を行います。
-
-- **非曲エントリの除外** — 雑談・告知などのエントリをフィルタリング
-- **CSVパースエラーの修正** — ローマ字表記の曲名を正式名称に変換
-- **アーティスト名の注釈分離** — 「(初披露)」「(ワンコーラス)」等を `performance_note` カラムに移動
-- **表記ゆれ修正** — タイポ修正、ローマ字→公式表記の統一
-- **ビデオコンテキスト補正** — 配信タイトルに含まれるアーティスト名（「BUMPの曲を歌います」等）から推測
-- **MusicBrainz API による補完** — 上記で特定できなかった曲について、オープンな音楽データベースで検索
-
-出力:
-
-| ファイル | 内容 |
-|---|---|
-| `app_songs_enriched.csv` | 補完済み曲マスタ（song_id, title, artist, performance_note） |
-| `enrichment_log.json` | 各曲の処理内容・判定理由のログ |
-
-`enrichment_log.json` にはすべての処理の判定理由が記録されており、どの曲がどのように補完・修正されたかを確認できます。
+`fetch_setlists.py` → `parse_setlists.py` → `build_app_data.py` → `enrich_songs.py` はコメント解析ベースの旧パイプラインで、リポジトリには残置していますが現在アプリ用 CSV の生成元としては使用していません（コメント解析の誤検出問題が再発するため）。
 
 ## Webアプリ（app）
 

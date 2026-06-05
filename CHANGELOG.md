@@ -13,5 +13,10 @@
   - 削除/非公開動画（YouTube API でタイトル取得不可）は関連 performance ごと自動除外
   - データ件数: 動画 118 → 243、曲 1099 → 720、演奏 2380 → 3974
 - 旧パイプライン (`fetch_setlists.py` → `parse_setlists.py` → `build_app_data.py` → `enrich_songs.py`) は当面残置するが、アプリ用 CSV の生成元としては不使用
+- 公開用 `data/song_performances.csv` もシートから直接生成するよう変更（`build_from_sheet.py` が `video_url` 付き・`HH:MM:SS` 形式で出力）
+- README / `data/README.md` を新パイプライン構成に合わせて全面更新
+
+### Removed
+- 旧パイプラインの中間ファイル `data/songs.csv` を削除（再生回数は `app_performances.csv` から導出可能）
 
 [Unreleased]: https://github.com/miyatayuya/setlist-player/compare/main...HEAD

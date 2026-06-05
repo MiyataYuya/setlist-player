@@ -1,79 +1,66 @@
 # data/ — データファイル一覧
 
-このディレクトリには、YouTube配信アーカイブから生成した楽曲・パフォーマンス・動画のデータが格納されています。
-すべてのCSVは `scraper/` 内のスクリプトによって生成されます。
+このディレクトリには、配信アーカイブから生成した楽曲・パフォーマンス・動画のデータが格納されています。すべてのCSVは `scraper/build_from_sheet.py` が手動キュレーションされた Google スプレッドシートから生成します。
 
 ## 生成パイプライン
 
 ```
-playlists.txt
-   │  fetch_setlists.py   … プレイリスト内動画のコメントを走査
+scraper/sheet_source.xlsx  (Googleスプレッドシートからダウンロード)
+   │  scraper/build_from_sheet.py
+   │    - URL列のハイパーリンクから video_id と start_seconds を抽出
+   │    - YouTube Data API v3 で動画メタデータを補完 (キャッシュ優先)
+   │    - 削除/非公開動画は関連 performance ごと除外
+   │    - end_seconds は同一動画内の次曲 start で自動補完
    ▼
-setlists_raw.json
-   │  parse_setlists.py   … セトリコメントをパース
-   ▼
-songs.csv / song_performances.csv
-   │  build_app_data.py   … 秒数変換・表記揺れ統一・ID採番
-   ▼
-app_songs.csv / app_performances.csv / app_videos.csv
-   │  enrich_songs.py     … アーティスト名の補完・正規化
-   ▼
-app_songs_enriched.csv / enrichment_log.json
+app_songs.csv / app_songs_enriched.csv
+app_performances.csv / app_videos.csv
+song_performances.csv  (公開用)
 ```
 
-実行方法の詳細はリポジトリルートの [`README.md`](../README.md) の「データ生成パイプライン」を参照してください。
-すべて `scraper/` ディレクトリで `uv run <スクリプト名>` として実行します。
+実行方法はリポジトリルートの [`README.md`](../README.md#データパイプライン) を参照してください。
 
 ## ファイル詳細
 
-### 中間データ（パース直後）
+### `song_performances.csv` — 公開用CSV
 
-#### `songs.csv`
-`parse_setlists.py` が出力する曲ごとの集計。
-
-| カラム | 説明 |
-|---|---|
-| `song_name` | 曲名（パース直後の生の表記） |
-| `artist` | アーティスト名（未入力の場合あり） |
-| `play_count` | 全配信を通じた歌唱回数 |
-
-#### `song_performances.csv`
-1パフォーマンス（=ある配信で1曲歌った記録）が1行。アプリ向けに加工する前の生データ。
-全楽曲データの公開用ファイルとしてREADMEからリンクされている。
+1パフォーマンス（=ある配信で1曲歌った記録）が1行。CSVだけでアプリを使わずに該当曲をYouTubeで直接視聴できるよう、人間可読のフォーマットで保持されています。
 
 | カラム | 説明 |
 |---|---|
 | `song_name` | 曲名 |
-| `artist` | アーティスト名（未入力の場合あり） |
+| `artist` | アーティスト名 |
 | `video_id` | YouTube動画ID |
-| `video_url` | タイムスタンプ付き視聴URL |
+| `video_url` | タイムスタンプ付き視聴URL（`https://youtu.be/{id}?t={秒}`） |
 | `published_at` | 配信公開日時（ISO 8601） |
 | `start_time` | 曲開始位置（`HH:MM:SS`） |
-| `end_time` | 曲終了位置（`HH:MM:SS`、未入力の場合あり） |
+| `end_time` | 曲終了位置（`HH:MM:SS`） |
 
-> `end_time` は約65%が未入力のため、`build_app_data.py` では「次の曲の `start_time`」で代替している。詳細は [`docs/decisions.md`](../docs/decisions.md) を参照。
+### アプリ用データ
 
-### アプリ用データ（`build_app_data.py` 出力）
+アプリ（`app/`）が `vite.config.ts` の `csvDataPlugin` 経由で読み込むファイル群。
 
-タイムスタンプの秒数変換、曲名の表記揺れ統一、ID採番を行ったもの。
+#### `app_songs_enriched.csv` — 曲マスタ
 
-#### `app_songs.csv` — 曲マスタ
+アプリが直接読む曲マスタ。後方互換のため旧スキーマ（`performance_note` 列）を維持していますが、シート由来のデータではこの列は常に空になります。
 
 | カラム | 説明 |
 |---|---|
 | `song_id` | 曲ID（`song_0001` 形式） |
 | `title` | 曲名 |
 | `artist` | アーティスト名 |
+| `performance_note` | 注釈（旧パイプライン互換用、現在は常に空） |
+
+`app_songs.csv` は `performance_note` を抜いた同等のファイル（互換用に並行出力）。
 
 #### `app_performances.csv` — パフォーマンス
 
 | カラム | 説明 |
 |---|---|
 | `performance_id` | パフォーマンスID（`perf_0001` 形式） |
-| `song_id` | `app_songs.csv` への参照 |
+| `song_id` | `app_songs_enriched.csv` への参照 |
 | `video_id` | `app_videos.csv` への参照 |
 | `start_seconds` | 曲開始位置（秒） |
-| `end_seconds` | 曲終了位置（秒） |
+| `end_seconds` | 曲終了位置（秒、同一動画内の次曲開始秒で自動補完） |
 | `published_at` | 配信公開日時（ISO 8601） |
 
 #### `app_videos.csv` — 動画情報
@@ -88,33 +75,10 @@ app_songs_enriched.csv / enrichment_log.json
 | `view_count` | 再生数 |
 | `like_count` | 高評価数 |
 
-### 補完済みデータ（`enrich_songs.py` 出力）
+## 旧パイプライン由来の中間ファイル
 
-`app_songs.csv` を入力に、非曲エントリの除外・表記ゆれ修正・MusicBrainz APIによるアーティスト補完などを行ったもの。
-設計詳細は [`docs/plans/2026-03-08-enrich-songs-design.md`](../docs/plans/2026-03-08-enrich-songs-design.md) を参照。
-
-#### `app_songs_enriched.csv` — 補完済み曲マスタ
-
-| カラム | 説明 |
-|---|---|
-| `song_id` | 曲ID（`app_songs.csv` と対応） |
-| `title` | 曲名 |
-| `artist` | 補完・正規化済みアーティスト名 |
-| `performance_note` | 「(初披露)」「(ワンコーラス)」等の注釈 |
-
-#### `enrichment_log.json`
-各曲の処理内容・判定理由（どの曲をどう補完・修正したか）を記録したログ。
-
-## アプリでの利用
-
-アプリが実際に読み込むのは次の3ファイル。`app/vite.config.ts` の `csvDataPlugin` がビルド時にパースし、
-仮想モジュール（`virtual:songs`, `virtual:performances`, `virtual:videos`）として提供する。
-
-- `app_songs_enriched.csv`
-- `app_performances.csv`
-- `app_videos.csv`
+`scraper/setlists_raw.json` は旧パイプライン（コメント解析）の出力で、現在のアプリ用 CSV の生成元としては使用していません。
 
 ## 補足
 
-- `*.csv.bak` は生成スクリプト実行時の自動バックアップ。
-- 配信者の権利保護のため、このリポジトリには音声・動画の本体は一切含まれない。再生は必ずYouTube IFrame Player API経由で行われる。
+配信者の権利保護のため、このリポジトリには音声・動画の本体は一切含まれません。再生は必ず YouTube IFrame Player API 経由で行われます。

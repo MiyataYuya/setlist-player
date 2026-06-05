@@ -33,5 +33,25 @@ export function renderWithRoute(ui: ReactElement, initialEntries: string[]) {
   });
 }
 
+/**
+ * useMediaQuery 用に matchMedia を差し替える。
+ * isDesktop=true なら min-width 系クエリ（lg以上）を true にする。
+ */
+export function setMatchMedia(isDesktop: boolean) {
+  Object.defineProperty(window, "matchMedia", {
+    writable: true,
+    value: (query: string) => ({
+      matches: isDesktop && query.includes("min-width"),
+      media: query,
+      onchange: null,
+      addEventListener: () => {},
+      removeEventListener: () => {},
+      addListener: () => {},
+      removeListener: () => {},
+      dispatchEvent: () => false,
+    }),
+  });
+}
+
 export { default as userEvent } from "@testing-library/user-event";
 export { screen, waitFor, act } from "@testing-library/react";

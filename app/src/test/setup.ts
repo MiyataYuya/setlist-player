@@ -52,3 +52,19 @@ const localStorageMock = (() => {
 })();
 
 Object.defineProperty(globalThis, "localStorage", { value: localStorageMock });
+
+// Mock matchMedia（デフォルトは「マッチしない」= モバイル幅扱い）
+// テストごとに helpers の setMatchMedia() で上書きする。
+Object.defineProperty(globalThis, "matchMedia", {
+  writable: true,
+  value: (query: string) => ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addEventListener: () => {},
+    removeEventListener: () => {},
+    addListener: () => {},
+    removeListener: () => {},
+    dispatchEvent: () => false,
+  }),
+});

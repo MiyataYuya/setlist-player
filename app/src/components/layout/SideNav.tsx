@@ -13,9 +13,8 @@ export default function SideNav() {
   const navigate = useNavigate();
 
   const handleClick = (path: string) => {
-    if (usePlayerStore.getState().isPlayerOpen) {
-      usePlayerStore.getState().closePlayer();
-    }
+    const store = usePlayerStore.getState();
+    if (store.isPlayerOpen) store.closePlayer();
     navigate(path);
   };
 
@@ -26,6 +25,7 @@ export default function SideNav() {
         width: 220,
         flexShrink: 0,
         height: "100vh",
+        overflowY: "auto",
         borderRight: "1px solid",
         borderColor: "divider",
         bgcolor: "background.paper",

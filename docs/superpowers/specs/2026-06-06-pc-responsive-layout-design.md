@@ -65,6 +65,8 @@ DRY を重視し、再生画面の中身は共有コンポーネントに切り�
 
 座標合わせの具体手段（fixed 座標計算 / React Portal でプレースホルダへ投影 等）は実装計画フェーズで、単一マウント制約を壊さない範囲で最適なものを選ぶ。**「`YouTubeEmbed` を 1 回しかマウントしない」ことだけは設計として固定する。**
 
+> **実装方式の確定（2026-06-06 追記）:** 上記の制約を、別シェル（`DesktopShell`/`DesktopPlayerPanel`）を2つ作るのではなく、**単一のコンポーネントツリーを MUI の `sx` レスポンシブで変形する**方式で実現する。`App.tsx` 内にプレイヤーペインの Box を1つ置き、`isDesktop` に応じて「右カラム固定」と「下からスライドするオーバーレイ」を出し分ける。`YouTubeEmbed` はそのツリーの1箇所にしか書かれないため、座標計算や Portal を使わずに単一マウントが保証される。再生画面の中身は `PlayerBody`（`variant: 'overlay' | 'panel'`）に切り出してモバイル/PC で共有する。詳細は実装計画 `docs/superpowers/plans/2026-06-06-pc-responsive-layout.md` を参照。
+
 ## 状態管理への影響
 
 - `playerStore` は無変更

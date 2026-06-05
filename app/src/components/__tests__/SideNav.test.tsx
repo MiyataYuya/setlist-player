@@ -12,15 +12,15 @@ describe("SideNav", () => {
 
   it("marks the current route item as selected", () => {
     renderWithRoute(<SideNav />, ["/search"]);
-    const searchItem = screen.getByText("検索").closest("a, [role='button'], li, div");
-    expect(searchItem?.className).toMatch(/selected|Mui-selected/);
+    const searchItem = screen.getByRole("button", { name: "検索" });
+    expect(searchItem.className).toMatch(/Mui-selected/);
   });
 
   it("navigates when an item is clicked", async () => {
     const user = userEvent.setup();
     renderWithRoute(<SideNav />, ["/"]);
     await user.click(screen.getByText("ライブラリ"));
-    const libItem = screen.getByText("ライブラリ").closest("a, [role='button'], li, div");
-    expect(libItem?.className).toMatch(/selected|Mui-selected/);
+    const libItem = screen.getByRole("button", { name: "ライブラリ" });
+    expect(libItem.className).toMatch(/Mui-selected/);
   });
 });

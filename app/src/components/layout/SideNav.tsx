@@ -2,6 +2,7 @@ import Box from "@mui/material/Box";
 import List from "@mui/material/List";
 import ListItemButton from "@mui/material/ListItemButton";
 import ListItemIcon from "@mui/material/ListItemIcon";
+import ListItemText from "@mui/material/ListItemText";
 import Typography from "@mui/material/Typography";
 import { useLocation, useNavigate } from "react-router-dom";
 import { usePlayerStore } from "../../stores/playerStore";
@@ -45,9 +46,7 @@ export default function SideNav() {
             sx={{ borderRadius: 2, mx: 1 }}
           >
             <ListItemIcon sx={{ minWidth: 40 }}>{item.icon}</ListItemIcon>
-            <Typography component="span" variant="body1">
-              {item.label}
-            </Typography>
+            <ListItemText primary={item.label} />
           </ListItemButton>
         ))}
       </List>

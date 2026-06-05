@@ -8,6 +8,15 @@ import { usePlayerStore } from "../../stores/playerStore";
 import { useLayoutStore } from "../../stores/layoutStore";
 import { songPerformances } from "../../data/songs";
 
+// react-youtube は実ブラウザの IFrame API を要するため、videoId を観測できる
+// 軽量プレースホルダに差し替える。これにより YouTubeEmbed が生成時に渡す
+// videoId を検証できる。
+vi.mock("react-youtube", () => ({
+  default: ({ videoId }: { videoId: string }) => (
+    <div data-testid="yt-player" data-video-id={videoId} />
+  ),
+}));
+
 function renderApp() {
   return render(
     <ThemeProvider theme={theme}>
@@ -61,6 +70,26 @@ describe("App responsive shell", () => {
     useLayoutStore.setState({ playerPaneWidth: 500 });
     renderApp();
     expect(screen.getByRole("separator")).toHaveAttribute("aria-valuenow", "500");
+  });
+
+  it("PCで最初に選んだ曲が正しい videoId でプレイヤーにマウントされる", async () => {
+    setMatchMedia(true);
+    const sample = songPerformances[0];
+
+    renderApp(); // 曲なしでマウント（PCではプレイヤー枠が常設される）
+    // 曲未選択ではプレイヤー本体（iframe）はマウントしない
+    expect(screen.queryByTestId("yt-player")).toBeNull();
+
+    // 最初の曲を選択
+    await act(async () => {
+      usePlayerStore.getState().playSong(sample, [sample]);
+    });
+
+    // 最初に選んだ曲が正しい videoId で読み込まれること（空文字で固定されない）
+    expect(screen.getByTestId("yt-player")).toHaveAttribute(
+      "data-video-id",
+      sample.videoId
+    );
   });
 
   it("pushes at most one history entry per player-open session on mobile", async () => {

@@ -136,7 +136,11 @@ function AppContent() {
                 }
           }
         >
-          <YouTubeEmbed />
+          {/* YouTubeEmbed はマウント時の videoId を ref で固定するため、
+              曲が存在する状態で初めてマウントする（PCの曲未選択枠で空 videoId
+              のまま固定され、初回再生が読み込まれない問題を防ぐ）。
+              currentSong がある限り幅変更・ペイン往復でも再マウントされない。 */}
+          {currentSong != null && <YouTubeEmbed />}
           <PlayerBody variant={isDesktop ? "panel" : "overlay"} />
         </Box>
       )}

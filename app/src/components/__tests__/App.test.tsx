@@ -92,28 +92,21 @@ describe("App responsive shell", () => {
     );
   });
 
-  it("pushes at most one history entry per player-open session on mobile", async () => {
+  it("PCへ切り替えると、最上段に残るモバイルの合成履歴エントリを取り除く", async () => {
     setMatchMedia(false);
-    const pushSpy = vi.spyOn(window.history, "pushState");
+    const backSpy = vi
+      .spyOn(window.history, "back")
+      .mockImplementation(() => {});
     const sample = songPerformances[0];
 
     const { rerender } = renderApp();
-    // 再生開始 → isPlayerOpen=true（1回push）
     await act(async () => {
       usePlayerStore.getState().playSong(sample, [sample]);
     });
-    const afterOpen = pushSpy.mock.calls.length;
-    expect(afterOpen).toBeGreaterThanOrEqual(1);
+    // モバイルで開く → 合成エントリが最上段に積まれている
+    expect(window.history.state?.playerOpen).toBe(true);
 
-    // isPlayerOpen が true のまま再レンダーが起きても push は増えない
-    await act(async () => {
-      usePlayerStore.setState({ isPlaying: false }); // 無関係な更新で再レンダー誘発
-    });
-    expect(pushSpy.mock.calls.length).toBe(afterOpen);
-
-    // ブレークポイント往復（mobile→desktop→mobile）で isPlayerOpen が true のまま
-    // effect が再発火しても、開セッション中は push が増えてはならない（本バグの核心）。
-    // mobile → desktop（isDesktop=true。!isDesktop=false なので push しない）
+    // PCへ切り替え → 空振りバックを防ぐため合成エントリを取り除く
     await act(async () => {
       setMatchMedia(true);
       rerender(
@@ -122,14 +115,58 @@ describe("App responsive shell", () => {
         </ThemeProvider>
       );
     });
-    // desktop → mobile（isDesktop=false に戻る。isPlayerOpen は true のまま）
+    expect(backSpy).toHaveBeenCalledOnce();
+
+    backSpy.mockRestore();
+  });
+
+  it("PCへ切り替えても、合成エントリが最上段でなければ履歴を触らない", async () => {
+    setMatchMedia(false);
+    const sample = songPerformances[0];
+
+    const { rerender } = renderApp();
     await act(async () => {
-      setMatchMedia(false);
+      usePlayerStore.getState().playSong(sample, [sample]);
+    });
+    // 合成エントリの上に別ページ遷移を積んだ状況を再現（playerOpen でない state）
+    await act(async () => {
+      window.history.pushState({}, "");
+    });
+    expect(window.history.state?.playerOpen).toBeUndefined();
+
+    const backSpy = vi
+      .spyOn(window.history, "back")
+      .mockImplementation(() => {});
+    // PCへ切り替え → 上に別ページが積まれているので back は呼ばない（誤って別ページを戻さない）
+    await act(async () => {
+      setMatchMedia(true);
       rerender(
         <ThemeProvider theme={theme}>
           <App />
         </ThemeProvider>
       );
+    });
+    expect(backSpy).not.toHaveBeenCalled();
+
+    backSpy.mockRestore();
+  });
+
+  it("pushes at most one history entry per player-open session on mobile", async () => {
+    setMatchMedia(false);
+    const pushSpy = vi.spyOn(window.history, "pushState");
+    const sample = songPerformances[0];
+
+    renderApp();
+    // 再生開始 → isPlayerOpen=true（1回push）
+    await act(async () => {
+      usePlayerStore.getState().playSong(sample, [sample]);
+    });
+    const afterOpen = pushSpy.mock.calls.length;
+    expect(afterOpen).toBeGreaterThanOrEqual(1);
+
+    // isPlayerOpen が true のまま無関係な再レンダーが起きても push は増えない
+    await act(async () => {
+      usePlayerStore.setState({ isPlaying: false }); // 無関係な更新で再レンダー誘発
     });
     expect(pushSpy.mock.calls.length).toBe(afterOpen);
 

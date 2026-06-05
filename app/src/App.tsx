@@ -51,8 +51,9 @@ function AppContent() {
   const historyEntryPushedRef = useRef(false);
 
   // ブラウザバックで再生画面を閉じる（モバイルのオーバーレイのみ）。
-  // isPlayerOpen はストアに永続するため、ブレークポイント往復で本effectが再発火しても
-  // 1つの「開セッション」につき pushState は1回だけにする（重複履歴エントリ防止）。
+  // isPlayerOpen はメモリ上のストア状態で、ブレークポイント往復でも保たれるため、
+  // 本effectが再発火しても1つの「開セッション」につき pushState は1回だけにする
+  // （重複履歴エントリ防止）。
   useEffect(() => {
     if (isPlayerOpen && !isDesktop) {
       if (!historyEntryPushedRef.current) {
@@ -63,6 +64,20 @@ function AppContent() {
       historyEntryPushedRef.current = false;
     }
   }, [isPlayerOpen, isDesktop]);
+
+  // PCへ切り替わった際、モバイルで積んだ合成履歴エントリが最上段に残っていると
+  // PCでの「戻る」が空振りする。最上段が自分のエントリ（state.playerOpen）のときだけ
+  // 安全に取り除く。上に別ページが積まれている場合は誤って戻さないよう触らない。
+  useEffect(() => {
+    if (
+      isDesktop &&
+      historyEntryPushedRef.current &&
+      window.history.state?.playerOpen === true
+    ) {
+      historyEntryPushedRef.current = false;
+      window.history.back();
+    }
+  }, [isDesktop]);
 
   useEffect(() => {
     if (isDesktop) return; // デスクトップはpopstateでclosePlayerしない（オーバーレイがないため）

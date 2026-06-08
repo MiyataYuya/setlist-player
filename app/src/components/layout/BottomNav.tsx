@@ -1,17 +1,9 @@
 import BottomNavigation from "@mui/material/BottomNavigation";
 import BottomNavigationAction from "@mui/material/BottomNavigationAction";
 import Paper from "@mui/material/Paper";
-import HomeIcon from "@mui/icons-material/Home";
-import SearchIcon from "@mui/icons-material/Search";
-import LibraryMusicIcon from "@mui/icons-material/LibraryMusic";
 import { useLocation, useNavigate } from "react-router-dom";
 import { usePlayerStore } from "../../stores/playerStore";
-
-const NAV_ITEMS = [
-  { label: "ホーム", icon: <HomeIcon />, path: "/" },
-  { label: "検索", icon: <SearchIcon />, path: "/search" },
-  { label: "ライブラリ", icon: <LibraryMusicIcon />, path: "/library" },
-];
+import { NAV_ITEMS } from "./navItems";
 
 export default function BottomNav() {
   const location = useLocation();

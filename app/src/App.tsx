@@ -1,17 +1,22 @@
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import Box from "@mui/material/Box";
 import BottomNav from "./components/layout/BottomNav";
+import SideNav from "./components/layout/SideNav";
 import MiniPlayer from "./components/layout/MiniPlayer";
 import HomePage from "./pages/HomePage";
 import SearchPage from "./pages/SearchPage";
 import LibraryPage from "./pages/LibraryPage";
-import PlayerScreen from "./components/player/PlayerScreen";
+import PlayerBody from "./components/player/PlayerBody";
 import PlaylistPage from "./pages/PlaylistPage";
 import YouTubeEmbed from "./components/player/YouTubeEmbed";
 import { useCurrentSong, usePlayerStore } from "./stores/playerStore";
+import { useIsDesktop } from "./hooks/useIsDesktop";
+import ResizeHandle from "./components/layout/ResizeHandle";
+import { useLayoutStore } from "./stores/layoutStore";
 import { useState, useEffect, useRef } from "react";
+import type { ReactNode } from "react";
 
-function FadeRoutes({ children }: { children: React.ReactNode }) {
+function FadeRoutes({ children }: { children: ReactNode }) {
   const location = useLocation();
   const [fadeIn, setFadeIn] = useState(true);
   const prevPathRef = useRef(location.pathname);
@@ -41,15 +46,41 @@ function FadeRoutes({ children }: { children: React.ReactNode }) {
 function AppContent() {
   const currentSong = useCurrentSong();
   const isPlayerOpen = usePlayerStore((s) => s.isPlayerOpen);
+  const isDesktop = useIsDesktop();
+  const playerPaneWidth = useLayoutStore((s) => s.playerPaneWidth);
+  const historyEntryPushedRef = useRef(false);
 
-  // ブラウザバックで再生画面を閉じる
+  // ブラウザバックで再生画面を閉じる（モバイルのオーバーレイのみ）。
+  // isPlayerOpen はメモリ上のストア状態で、ブレークポイント往復でも保たれるため、
+  // 本effectが再発火しても1つの「開セッション」につき pushState は1回だけにする
+  // （重複履歴エントリ防止）。
   useEffect(() => {
-    if (isPlayerOpen) {
-      window.history.pushState({ playerOpen: true }, "");
+    if (isPlayerOpen && !isDesktop) {
+      if (!historyEntryPushedRef.current) {
+        window.history.pushState({ playerOpen: true }, "");
+        historyEntryPushedRef.current = true;
+      }
+    } else if (!isPlayerOpen) {
+      historyEntryPushedRef.current = false;
     }
-  }, [isPlayerOpen]);
+  }, [isPlayerOpen, isDesktop]);
+
+  // PCへ切り替わった際、モバイルで積んだ合成履歴エントリが最上段に残っていると
+  // PCでの「戻る」が空振りする。最上段が自分のエントリ（state.playerOpen）のときだけ
+  // 安全に取り除く。上に別ページが積まれている場合は誤って戻さないよう触らない。
+  useEffect(() => {
+    if (
+      isDesktop &&
+      historyEntryPushedRef.current &&
+      window.history.state?.playerOpen === true
+    ) {
+      historyEntryPushedRef.current = false;
+      window.history.back();
+    }
+  }, [isDesktop]);
 
   useEffect(() => {
+    if (isDesktop) return; // デスクトップはpopstateでclosePlayerしない（オーバーレイがないため）
     const handlePopState = () => {
       if (usePlayerStore.getState().isPlayerOpen) {
         usePlayerStore.getState().closePlayer();
@@ -57,14 +88,24 @@ function AppContent() {
     };
     window.addEventListener("popstate", handlePopState);
     return () => window.removeEventListener("popstate", handlePopState);
-  }, []);
+  }, [isDesktop]);
+
+  // PCでは右カラムを常設（曲未選択でも枠を出す）。モバイルでは曲がある時だけオーバーレイをマウント。
+  const showPlayerPane = isDesktop || currentSong != null;
 
   return (
-    <>
+    <Box sx={{ display: "flex", minHeight: "100vh" }}>
+      {isDesktop && <SideNav />}
+
       <Box
         sx={{
-          pb: "calc(120px + env(safe-area-inset-bottom, 0px))",
-          minHeight: "100vh",
+          flex: 1,
+          minWidth: 0,
+          height: isDesktop ? "100vh" : "auto",
+          overflowY: isDesktop ? "auto" : "visible",
+          pb: isDesktop
+            ? 2
+            : "calc(120px + env(safe-area-inset-bottom, 0px))",
         }}
       >
         <FadeRoutes>
@@ -77,32 +118,51 @@ function AppContent() {
         </FadeRoutes>
       </Box>
 
-      {/* 再生画面オーバーレイ（BottomNavの上にスライド、BottomNav自体は常に表示） */}
-      {currentSong && (
+      {isDesktop && showPlayerPane && <ResizeHandle />}
+
+      {showPlayerPane && (
         <Box
-          sx={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: "calc(56px + env(safe-area-inset-bottom, 0px))",
-            zIndex: 1100,
-            transform: isPlayerOpen ? "translateY(0)" : "translateY(100%)",
-            transition: "transform 300ms cubic-bezier(0.4, 0, 0.2, 1)",
-            bgcolor: "background.default",
-            display: "flex",
-            flexDirection: "column",
-            overflow: "hidden",
-          }}
+          sx={
+            isDesktop
+              ? {
+                  width: playerPaneWidth,
+                  flexShrink: 0,
+                  height: "100vh",
+                  bgcolor: "background.default",
+                  display: "flex",
+                  flexDirection: "column",
+                  overflow: "hidden",
+                }
+              : {
+                  position: "fixed",
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: "calc(56px + env(safe-area-inset-bottom, 0px))",
+                  zIndex: 1100,
+                  transform: isPlayerOpen
+                    ? "translateY(0)"
+                    : "translateY(100%)",
+                  transition: "transform 300ms cubic-bezier(0.4, 0, 0.2, 1)",
+                  bgcolor: "background.default",
+                  display: "flex",
+                  flexDirection: "column",
+                  overflow: "hidden",
+                }
+          }
         >
-          <YouTubeEmbed />
-          <PlayerScreen />
+          {/* YouTubeEmbed はマウント時の videoId を ref で固定するため、
+              曲が存在する状態で初めてマウントする（PCの曲未選択枠で空 videoId
+              のまま固定され、初回再生が読み込まれない問題を防ぐ）。
+              currentSong がある限り幅変更・ペイン往復でも再マウントされない。 */}
+          {currentSong != null && <YouTubeEmbed />}
+          <PlayerBody variant={isDesktop ? "panel" : "overlay"} />
         </Box>
       )}
 
-      <MiniPlayer />
-      <BottomNav />
-    </>
+      {!isDesktop && <MiniPlayer />}
+      {!isDesktop && <BottomNav />}
+    </Box>
   );
 }
 

@@ -1,0 +1,23 @@
+# 変更履歴
+
+このプロジェクトの注目すべき変更はこのファイルに記録されます。
+
+フォーマットは [Keep a Changelog](https://keepachangelog.com/ja/1.1.0/) に基づき、バージョニングは [Semantic Versioning](https://semver.org/lang/ja/) に従います。
+
+## [Unreleased]
+
+### Changed
+- データパイプラインを Google スプレッドシートを「正」とする方式に移行 (`scraper/build_from_sheet.py`)
+  - 曲名・アーティスト・タイムスタンプは手動管理されたシートのハイパーリンクから取得
+  - シートの URL 列に埋め込まれた `youtube.com/watch?v=...&t=Ns` 形式のリンクから `video_id` と `start_seconds` を抽出
+  - 削除/非公開動画（YouTube API でタイトル取得不可）は関連 performance ごと自動除外
+  - データ件数: 動画 118 → 243、曲 1099 → 720、演奏 2380 → 3974
+- 旧パイプライン (`fetch_setlists.py` → `parse_setlists.py` → `build_app_data.py` → `enrich_songs.py`) は当面残置するが、アプリ用 CSV の生成元としては不使用
+- 公開用 `data/song_performances.csv` もシートから直接生成するよう変更（`build_from_sheet.py` が `video_url` 付き・`HH:MM:SS` 形式で出力）
+- README / `data/README.md` を新パイプライン構成に合わせて全面更新
+- データソースが有志の方が公開している非公式 Google スプレッドシートであることを README に明記、シートへのリンクと管理者の方への謝辞・利用停止対応の方針を追加
+
+### Removed
+- 旧パイプラインの中間ファイル `data/songs.csv` を削除（再生回数は `app_performances.csv` から導出可能）
+
+[Unreleased]: https://github.com/miyatayuya/setlist-player/compare/main...HEAD

@@ -235,8 +235,13 @@ def build(xlsx_path: str) -> None:
     perf_rows = extract_sheet_rows(xlsx_path)
     print(f"  {len(perf_rows)} performance rows extracted")
 
-    # song_id 採番
-    song_id_map, songs = assign_song_ids(perf_rows)
+    # 新曲採番順を決定的にするため (date, no) 昇順に整列してから採番
+    perf_rows.sort(key=lambda r: (r["date"], r["no"]))
+
+    # song_id 採番（既存 app_songs.csv を台帳として既存 ID を固定）
+    existing_registry = load_song_registry(OUT_SONGS)
+    print(f"  Song registry: {len(existing_registry)} entries")
+    song_id_map, songs = assign_song_ids(perf_rows, existing_registry)
     print(f"  {len(songs)} unique songs")
 
     # video master
@@ -260,17 +265,9 @@ def build(xlsx_path: str) -> None:
         excluded = set(still_missing)
         perf_rows = [r for r in perf_rows if r["video_id"] not in excluded]
         video_ids = [v for v in video_ids if v not in excluded]
-        # 除外で参照されなくなった曲は songs からも削除
+        # 除外で参照されなくなった曲は songs からも削除（ID は振り直さない＝欠番許容）
         used_song_keys = {(r["title"], r["artist"]) for r in perf_rows}
         songs = [s for s in songs if (s["title"], s["artist"]) in used_song_keys]
-        # song_id を振り直し (歯抜けを避ける)
-        song_id_map = {}
-        renumbered_songs = []
-        for s in songs:
-            sid = f"song_{len(song_id_map) + 1:04d}"
-            song_id_map[(s["title"], s["artist"])] = sid
-            renumbered_songs.append({"song_id": sid, "title": s["title"], "artist": s["artist"]})
-        songs = renumbered_songs
         print(f"  除外後: songs={len(songs)}, perfs={len(perf_rows)}, videos={len(video_ids)}", file=sys.stderr)
 
     # performance 採番 + end_seconds 補完
@@ -290,6 +287,9 @@ def build(xlsx_path: str) -> None:
         })
 
     fill_end_seconds(perfs)
+
+    # 出力行順を安定させる（既存行の並びを保ち、新曲は末尾に並ぶ）
+    songs.sort(key=lambda s: _song_num(s["song_id"]))
 
     # CSV 出力
     os.makedirs(_DATA_DIR, exist_ok=True)

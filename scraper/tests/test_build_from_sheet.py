@@ -62,3 +62,17 @@ def test_empty_registry_numbers_sequentially_from_one():
     m, _ = assign_song_ids(_rows(("A", "x"), ("B", "y")), {})
     assert m[("A", "x")] == "song_0001"
     assert m[("B", "y")] == "song_0002"
+
+
+def test_assign_song_ids_ignores_broken_id_in_registry():
+    """台帳に壊れた song_id が混在しても有効な最大番号+1で採番する。"""
+    reg = {("Broken", "x"): "garbage", ("Good", "y"): "song_0003"}
+    m, _ = assign_song_ids(_rows(("Broken", "x"), ("Good", "y"), ("New", "z")), reg)
+    assert m[("New", "z")] == "song_0004"
+
+
+def test_assign_song_ids_all_broken_registry_starts_from_one():
+    """台帳が全件壊れていても song_0001 から採番する（song_0000 を生成しない）。"""
+    reg = {("A", "x"): "garbage"}
+    m, _ = assign_song_ids(_rows(("A", "x"), ("New", "z")), reg)
+    assert m[("New", "z")] == "song_0001"

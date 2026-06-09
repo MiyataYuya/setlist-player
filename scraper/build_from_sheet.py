@@ -115,7 +115,7 @@ def extract_sheet_rows(xlsx_path: str) -> list[dict]:
 
 def _song_num(song_id: str) -> int:
     """'song_0123' から数値 123 を取り出す。形式不一致は -1。"""
-    m = re.match(r"song_(\d+)$", song_id or "")
+    m = re.match(r"song_(\d+)$", song_id)
     return int(m.group(1)) if m else -1
 
 
@@ -132,7 +132,7 @@ def load_song_registry(path: str) -> dict[tuple[str, str], str]:
             sid = row.get("song_id")
             if not sid:
                 continue
-            registry[(row.get("title", ""), row.get("artist", ""))] = sid
+            registry[(row.get("title", "").strip(), row.get("artist", "").strip())] = sid
     return registry
 
 
@@ -149,7 +149,12 @@ def assign_song_ids(
     song_id_map: dict[tuple[str, str], str] = {}
     songs: list[dict] = []
     next_num = max(
-        (_song_num(sid) for sid in existing_registry.values()), default=0
+        (
+            n
+            for n in (_song_num(sid) for sid in existing_registry.values())
+            if n >= 0
+        ),
+        default=0,
     )
     for r in perf_rows:
         key = (r["title"], r["artist"])
@@ -272,9 +277,8 @@ def build(xlsx_path: str) -> None:
 
     # performance 採番 + end_seconds 補完
     perfs: list[dict] = []
-    # 入力順を保つ (date, no 順) - extract時の順序
-    perf_rows_sorted = sorted(perf_rows, key=lambda r: (r["date"], r["no"]))
-    for i, r in enumerate(perf_rows_sorted, start=1):
+    # perf_rows は build 冒頭で (date, no) 昇順に整列済み
+    for i, r in enumerate(perf_rows, start=1):
         sid = song_id_map[(r["title"], r["artist"])]
         published_at = cache.get(r["video_id"], {}).get("published_at", "")
         perfs.append({

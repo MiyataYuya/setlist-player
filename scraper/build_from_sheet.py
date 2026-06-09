@@ -113,6 +113,29 @@ def extract_sheet_rows(xlsx_path: str) -> list[dict]:
     return rows
 
 
+def _song_num(song_id: str) -> int:
+    """'song_0123' から数値 123 を取り出す。形式不一致は -1。"""
+    m = re.match(r"song_(\d+)$", song_id or "")
+    return int(m.group(1)) if m else -1
+
+
+def load_song_registry(path: str) -> dict[tuple[str, str], str]:
+    """既存 app_songs.csv から {(title, artist): song_id} の台帳を読む。
+
+    ファイルが無ければ空 dict（初回実行・後方互換）。
+    """
+    registry: dict[tuple[str, str], str] = {}
+    if not os.path.exists(path):
+        return registry
+    with open(path, "r", encoding="utf-8") as f:
+        for row in csv.DictReader(f):
+            sid = row.get("song_id")
+            if not sid:
+                continue
+            registry[(row.get("title", ""), row.get("artist", ""))] = sid
+    return registry
+
+
 def assign_song_ids(perf_rows: list[dict]) -> tuple[dict[tuple[str, str], str], list[dict]]:
     """(title, artist) のペアを song_id にマップ。
 

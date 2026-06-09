@@ -136,23 +136,31 @@ def load_song_registry(path: str) -> dict[tuple[str, str], str]:
     return registry
 
 
-def assign_song_ids(perf_rows: list[dict]) -> tuple[dict[tuple[str, str], str], list[dict]]:
-    """(title, artist) のペアを song_id にマップ。
+def assign_song_ids(
+    perf_rows: list[dict],
+    existing_registry: dict[tuple[str, str], str],
+) -> tuple[dict[tuple[str, str], str], list[dict]]:
+    """(title, artist) を song_id にマップ（台帳方式の安定採番）。
 
-    出現順に song_0001, song_0002, ... と採番。
+    既存台帳にある曲は song_id を固定。新曲のみ (台帳 + 当回採番済み) の
+    最大番号 + 1 で末尾採番する（欠番は詰めない）。新曲の採番順は
+    perf_rows の並び順（呼び出し側で date, no 昇順に整列して渡す）。
     """
     song_id_map: dict[tuple[str, str], str] = {}
     songs: list[dict] = []
+    next_num = max(
+        (_song_num(sid) for sid in existing_registry.values()), default=0
+    )
     for r in perf_rows:
         key = (r["title"], r["artist"])
-        if key not in song_id_map:
-            sid = f"song_{len(song_id_map) + 1:04d}"
-            song_id_map[key] = sid
-            songs.append({
-                "song_id": sid,
-                "title": r["title"],
-                "artist": r["artist"],
-            })
+        if key in song_id_map:
+            continue
+        sid = existing_registry.get(key)
+        if sid is None:
+            next_num += 1
+            sid = f"song_{next_num:04d}"
+        song_id_map[key] = sid
+        songs.append({"song_id": sid, "title": r["title"], "artist": r["artist"]})
     return song_id_map, songs
 
 

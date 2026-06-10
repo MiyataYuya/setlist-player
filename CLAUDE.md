@@ -70,11 +70,15 @@ npm run test:e2e     # Playwright E2Eテスト (dev serverを自動起動)
 cd scraper
 uv sync                                              # 依存解決
 export YOUTUBE_API_KEY="..."                         # 動画メタデータ取得に必要
-curl -sL "https://docs.google.com/spreadsheets/d/<ID>/export?format=xlsx" -o sheet_source.xlsx
+curl -sL "https://docs.google.com/spreadsheets/d/1rZfXp7j8Qh_gAhWuIEgGBt9Z_Pbn0QXoCLExQc6OrNI/export?format=xlsx" -o sheet_source.xlsx
 uv run build_from_sheet.py                           # data/app_*.csv と公開用CSVを再生成
 ```
 
 `sheet_source.xlsx` は `.gitignore` 済み。シートが更新されたら再ダウンロード→再生成。
+
+通常の更新は `/sync-db` カスタムコマンドを使う（シート取得→再生成→検証→バージョン採番→main/release push→デプロイ確認まで一括）。
+
+`YOUTUBE_API_KEY` 未設定だと新規動画が title 未取得となり**演奏ごと黙って除外**される（不完全データ）。新規配信を含む再生成では必須。既存動画は `app_videos.csv` キャッシュ利用でキー不要。
 
 ## Architecture
 
@@ -85,6 +89,7 @@ CSVファイル → Viteカスタムプラグイン（ビルド時パース） �
 - `vite.config.ts` の `csvDataPlugin` が `app_songs_enriched.csv`, `app_performances.csv`, `app_videos.csv` をビルド時に読み込み、`virtual:songs`, `virtual:performances`, `virtual:videos` として提供
 - `src/data/songs.ts` が仮想モジュールからデータを結合し、`songPerformances[]`, `streams[]`, lookup mapをエクスポート
 - テスト時は `src/test/__mocks__/` のモックデータが仮想モジュールを置き換え（`vitest.config.ts` のalias設定）
+- `song_id` は台帳方式の安定採番: 既存IDは `app_songs.csv` を台帳に固定、新曲のみ `max+1` を末尾採番（欠番許容）。配信追加時の `data/` 差分は**純追加（deletions=0）が正常**で、既存IDシフトが出たら回帰
 
 ### 状態管理 (Zustand v5)
 
@@ -130,6 +135,7 @@ MUI v7 ダークテーマ。テーマ定義は `src/theme.ts`。日本語フォ�
 - ストア: `use*Store` 命名、Zustandセレクタで購読を最小化
 - ベースURL: `/setlist-player/` (GitHub Pages デプロイ)
 - デプロイ: `release/*` ブランチへのpushで GitHub Actions → GitHub Pages
+- DB更新ごとに `app/package.json` の `version` パッチを +1（`package-lock.json` の2箇所も揃える）。ベースライン `1.0.0`
 - 無限スクロール: `useInfiniteScroll` フック + IntersectionObserver
 - 検索デバウンス: `useDebouncedValue` (500ms)
 - 楽曲自動送り: `useAutoAdvance` フック (endSeconds到達で次曲へ)

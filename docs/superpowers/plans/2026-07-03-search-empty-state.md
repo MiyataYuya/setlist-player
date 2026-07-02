@@ -215,7 +215,8 @@ describe("SearchPage", () => {
   it("入力時は検索結果と件数を表示し、誘導文を出さない", () => {
     useLibraryStore.setState({ searchQuery: "紅蓮華" });
     renderWithProviders(<SearchPage />);
-    expect(screen.getByText("紅蓮華")).toBeInTheDocument();
+    // モックデータには「紅蓮華」の演奏が複数あるため getAllByText を使う
+    expect(screen.getAllByText("紅蓮華").length).toBeGreaterThan(0);
     expect(screen.getByText(/件/)).toBeInTheDocument();
     expect(screen.queryByText("曲名やアーティスト名で検索")).not.toBeInTheDocument();
   });

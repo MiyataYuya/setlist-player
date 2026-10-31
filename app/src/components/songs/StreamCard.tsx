@@ -11,6 +11,7 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import type { Stream } from "../../data/types";
 import { formatJstDate } from "../../data/jstDate";
+import { cleanStreamTitle } from "../../data/streamTitle";
 import { usePlayerStore } from "../../stores/playerStore";
 import SongList from "./SongList";
 
@@ -24,13 +25,7 @@ export default function StreamCard({ stream }: Props) {
 
   const date = formatJstDate(stream.publishedAt);
 
-  // タイトルから定型句を除去して短くする
-  const displayTitle = stream.title
-    .replace(/【[^】]*】/g, "")         // 【...】全体を除去
-    .replace(/\s*-\s*ミナミイズミ.*$/, "")  // " - ミナミイズミ ..." 除去
-    .replace(/\s*singing stream.*$/i, "")   // "singing stream ..." 除去
-    .replace(/\s*#\S+/g, "")           // ハッシュタグ除去
-    .trim() || date;
+  const displayTitle = cleanStreamTitle(stream.title) || date;
 
   const handlePlay = (e: React.MouseEvent) => {
     e.stopPropagation();

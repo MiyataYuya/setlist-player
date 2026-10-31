@@ -12,7 +12,7 @@ export default function StreamList({ streams }: Props) {
 
   return (
     <>
-      <List disablePadding>
+      <List disablePadding data-testid="stream-list">
         {visibleItems.map((stream) => (
           <StreamCard key={stream.videoId} stream={stream} />
         ))}

@@ -1,12 +1,7 @@
 import { describe, it, expect } from "vitest";
-import { useLocation } from "react-router-dom";
 import { renderWithRoute, screen, userEvent } from "../../test/helpers";
+import LocationDisplay from "../../test/LocationDisplay";
 import SideNav from "../layout/SideNav";
-
-function LocationDisplay() {
-  const location = useLocation();
-  return <div data-testid="pathname">{location.pathname}</div>;
-}
 
 describe("SideNav", () => {
   it("displays 4 nav items in order: ホーム, カレンダー, 検索, ライブラリ", () => {

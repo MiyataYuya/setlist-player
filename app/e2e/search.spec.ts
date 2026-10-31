@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { closePlayerOverlay, songCards } from "./helpers";
 
 // 5.4 検索して再生
 test.describe("検索して再生", () => {
@@ -23,11 +24,9 @@ test.describe("検索して再生", () => {
     expect(count).toBeGreaterThan(0);
 
     // 5. 結果の曲をクリック → 再生開始
-    const resultSong = page.locator('[role="button"]').filter({ has: page.locator("img") }).first();
-    await resultSong.click();
+    await songCards(page).first().click();
 
-    // MiniPlayerが表示される
-    const miniPlayer = page.locator("css=[class*='MuiPaper-elevation4']");
-    await expect(miniPlayer).toBeVisible();
+    // 再生画面が開く。閉じると MiniPlayer が表示される
+    await closePlayerOverlay(page);
   });
 });

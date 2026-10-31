@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { songs, performances, videos, songPerformances, streams, getUniqueSongs } from "../songs";
+import { songs, performances, videos, songPerformances, songPerformanceById, streams, getUniqueSongs } from "../songs";
 
 describe("data/songs", () => {
   // #1 songPerformances join
@@ -35,6 +35,17 @@ describe("data/songs", () => {
     for (let i = 1; i < unique.length; i++) {
       expect(unique[i - 1].playCount).toBeGreaterThanOrEqual(unique[i].playCount);
     }
+  });
+
+  // #4b performanceId ルックアップ
+  it("songPerformanceById looks up a performance by its id", () => {
+    expect(songPerformanceById.get("p1")?.title).toBe("天体観測");
+    expect(songPerformanceById.size).toBe(songPerformances.length);
+  });
+
+  // #4c 存在しないIDは undefined
+  it("songPerformanceById returns undefined for an unknown id", () => {
+    expect(songPerformanceById.get("nope")).toBeUndefined();
   });
 
   // #5 streams grouping

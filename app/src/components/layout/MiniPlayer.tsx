@@ -20,6 +20,7 @@ export default function MiniPlayer() {
 
   return (
     <Paper
+      data-testid="mini-player"
       sx={{
         position: "fixed",
         bottom: "calc(56px + env(safe-area-inset-bottom, 0px))",

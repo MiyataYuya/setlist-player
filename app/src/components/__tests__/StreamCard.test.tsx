@@ -79,6 +79,15 @@ describe("StreamCard", () => {
     // After collapse with unmountOnExit, songs should be removed
   });
 
+  // #4b 展開した曲は縦リスト項目ではなくカードとして並ぶ
+  it("renders the expanded songs as cards rather than list items", async () => {
+    const user = userEvent.setup();
+    renderWithProviders(<StreamCard stream={stream} />);
+    await user.click(screen.getByText("新年歌配信！"));
+
+    expect(screen.getByText("Song1").closest("li")).toBeNull();
+  });
+
   // #5 play button
   it("play button starts playback of first song", async () => {
     const user = userEvent.setup();

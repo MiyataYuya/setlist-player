@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { closePlayerOverlay, songCards } from "./helpers";
 
 // 5.1 曲の閲覧と再生
 test.describe("曲の閲覧と再生", () => {
@@ -12,21 +13,18 @@ test.describe("曲の閲覧と再生", () => {
     await expect(songChip).toBeVisible();
 
     // 3. 曲名・アーティスト・日付が表示される
-    const songItems = page.locator('[role="button"]').filter({ has: page.locator("img") });
+    const songItems = songCards(page);
     await expect(songItems.first()).toBeVisible();
 
-    // 4. 曲をクリック
+    // 4. 曲をクリック → 再生画面がそのまま開く
     await songItems.first().click();
 
-    // 5. MiniPlayer に曲名が表示される
-    const miniPlayer = page.locator("css=[class*='MuiPaper-root'][class*='MuiPaper-elevation4']");
-    await expect(miniPlayer).toBeVisible();
+    // 5. 再生画面を閉じると MiniPlayer が出る
+    const miniPlayer = await closePlayerOverlay(page);
 
-    // 6. MiniPlayer をクリック → プレイヤー画面に遷移
+    // 6. MiniPlayer をクリック → 再生画面に戻る
     await miniPlayer.click();
-    await expect(page).toHaveURL(/\/player/);
-
-    // 7-8. プレイヤー画面が表示される
-    await expect(page.getByText("プレイヤー").or(page.locator("iframe"))).toBeVisible({ timeout: 5000 });
+    await expect(page.getByTestId("player-close")).toBeVisible();
+    await expect(miniPlayer).toBeHidden();
   });
 });

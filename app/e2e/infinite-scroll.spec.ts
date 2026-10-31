@@ -7,7 +7,10 @@ test.describe("無限スクロール", () => {
     await expect(page.getByRole("heading", { name: "ホーム" })).toBeVisible();
 
     // 1. 曲一覧を表示（初期状態で曲が50件以上あるか確認）
-    const totalCountText = await page.getByText(/\d+ 曲/).first().textContent();
+    const totalCountText = await page
+      .getByText(/\d+ 曲/)
+      .first()
+      .textContent();
     const totalCount = parseInt(totalCountText?.match(/(\d+)/)?.[1] ?? "0");
 
     if (totalCount <= 50) {
@@ -17,16 +20,21 @@ test.describe("無限スクロール", () => {
     }
 
     // 初期表示の曲数を数える
-    const initialItems = page.locator("ul").first().locator(":scope > li");
-    const initialCount = await initialItems.count();
+    const songList = page.getByTestId("song-list");
+    await expect(songList).toBeVisible();
+    const cards = songList.getByRole("listitem");
+    const initialCount = await cards.count();
     expect(initialCount).toBeLessThanOrEqual(50);
 
     // 2. 下にスクロール
-    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
-    await page.waitForTimeout(500);
+    await page.evaluate(() =>
+      window.scrollTo(0, document.body.scrollHeight)
+    );
+    await page.waitForTimeout(1000);
 
     // 3. 追加の曲が読み込まれたことを確認
-    const afterScrollCount = await initialItems.count();
-    expect(afterScrollCount).toBeGreaterThan(initialCount);
+    await expect
+      .poll(() => cards.count(), { timeout: 5000 })
+      .toBeGreaterThan(initialCount);
   });
 });

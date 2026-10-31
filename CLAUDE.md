@@ -93,7 +93,7 @@ CSVファイル → Viteカスタムプラグイン（ビルド時パース） �
 
 ### 状態管理 (Zustand v5)
 
-5つのストアがあり、player以外はLocalStorageに永続化:
+6つのストアがあり、player以外はLocalStorageに永続化:
 
 | Store | キー | 役割 |
 |-------|------|------|
@@ -102,6 +102,7 @@ CSVファイル → Viteカスタムプラグイン（ビルド時パース） �
 | `playlistStore` | `karaoke-playlists` | カスタムプレイリスト CRUD |
 | `historyStore` | `karaoke-history` | 再生履歴 (上限200件) |
 | `tagStore` | `karaoke-tags` | ユーザータグ |
+| `layoutStore` | `karaoke-layout` | プレイヤーペイン幅、曲の表示モード（リスト/タイル/グリッド） |
 
 `playerStore` にはモジュールレベルの `_playerRef` でYouTubeプレイヤーインスタンスを保持。
 

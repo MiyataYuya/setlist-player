@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Avatar from "@mui/material/Avatar";
 import Box from "@mui/material/Box";
+import { PILL_BUTTON_SX } from "../components/common/pillButtonSx";
 import Button from "@mui/material/Button";
 import IconButton from "@mui/material/IconButton";
 import List from "@mui/material/List";
@@ -17,10 +18,8 @@ import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import ShuffleIcon from "@mui/icons-material/Shuffle";
 import { usePlaylistStore } from "../stores/playlistStore";
 import { usePlayerStore } from "../stores/playerStore";
-import { songPerformances } from "../data/songs";
+import { songPerformanceById } from "../data/songs";
 import type { SongPerformance } from "../data/types";
-
-const spMap = new Map(songPerformances.map((s) => [s.performanceId, s]));
 
 export default function PlaylistPage() {
   const { id } = useParams<{ id: string }>();
@@ -38,7 +37,7 @@ export default function PlaylistPage() {
   const songs = useMemo(() => {
     if (!playlist) return [];
     return playlist.performanceIds
-      .map((pid) => spMap.get(pid))
+      .map((pid) => songPerformanceById.get(pid))
       .filter((s): s is SongPerformance => s !== undefined);
   }, [playlist]);
 
@@ -109,19 +108,25 @@ export default function PlaylistPage() {
       </Box>
 
       <Box sx={{ display: "flex", gap: 1, px: 2, mb: 2 }}>
+        {/* ホームのツールバーと同じピル型に揃える */}
         <Button
           variant="contained"
-          startIcon={<PlayArrowIcon />}
+          size="small"
+          startIcon={<PlayArrowIcon fontSize="small" />}
           onClick={handlePlay}
           disabled={songs.length === 0}
+          sx={PILL_BUTTON_SX}
         >
           再生
         </Button>
         <Button
           variant="outlined"
-          startIcon={<ShuffleIcon />}
+          size="small"
+          color="inherit"
+          startIcon={<ShuffleIcon fontSize="small" />}
           onClick={handleShuffle}
           disabled={songs.length === 0}
+          sx={PILL_BUTTON_SX}
         >
           シャッフル再生
         </Button>

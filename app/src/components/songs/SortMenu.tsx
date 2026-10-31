@@ -1,6 +1,9 @@
+import { useState } from "react";
+import IconButton from "@mui/material/IconButton";
+import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
-import Select from "@mui/material/Select";
-import type { SelectChangeEvent } from "@mui/material/Select";
+import Tooltip from "@mui/material/Tooltip";
+import SwapVertIcon from "@mui/icons-material/SwapVert";
 
 export type SortOption =
   | "date-desc"
@@ -25,17 +28,45 @@ const sortLabels: Record<SortOption, string> = {
 };
 
 export default function SortMenu({ value, onChange }: Props) {
-  function handleChange(event: SelectChangeEvent) {
-    onChange(event.target.value as SortOption);
+  const [anchor, setAnchor] = useState<HTMLElement | null>(null);
+
+  // アイコンだけだと現在の並び順が分からないので、ラベルに含める
+  const label = `並び替え: ${sortLabels[value]}`;
+
+  function handleSelect(option: SortOption): void {
+    onChange(option);
+    setAnchor(null);
   }
 
   return (
-    <Select size="small" value={value} onChange={handleChange} fullWidth>
-      {Object.entries(sortLabels).map(([key, label]) => (
-        <MenuItem key={key} value={key}>
-          {label}
-        </MenuItem>
-      ))}
-    </Select>
+    <>
+      <Tooltip title={label}>
+        <IconButton
+          size="small"
+          aria-label={label}
+          onClick={(e) => setAnchor(e.currentTarget)}
+        >
+          <SwapVertIcon fontSize="small" />
+        </IconButton>
+      </Tooltip>
+      <Menu
+        anchorEl={anchor}
+        open={Boolean(anchor)}
+        onClose={() => setAnchor(null)}
+      >
+        {Object.entries(sortLabels).map(([key, optionLabel]) => (
+          <MenuItem
+            key={key}
+            // 単一選択のメニューなので menuitem ではなく menuitemradio が正しい
+            role="menuitemradio"
+            aria-checked={key === value}
+            selected={key === value}
+            onClick={() => handleSelect(key as SortOption)}
+          >
+            {optionLabel}
+          </MenuItem>
+        ))}
+      </Menu>
+    </>
   );
 }

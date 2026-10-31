@@ -29,6 +29,11 @@ export const songPerformances: SongPerformance[] = performances.map((p) => {
   };
 });
 
+/** performanceId から SongPerformance へのルックアップ */
+export const songPerformanceById = new Map<string, SongPerformance>(
+  songPerformances.map((sp) => [sp.performanceId, sp])
+);
+
 /** 配信動画ごとにグループ化 (配信日時降順) */
 export const streams: Stream[] = (() => {
   const map = new Map<string, SongPerformance[]>();

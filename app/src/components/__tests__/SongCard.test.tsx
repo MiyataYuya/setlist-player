@@ -66,4 +66,33 @@ describe("SongCard", () => {
     renderWithProviders(<SongCard song={song} queue={queue} />);
     expect(screen.getByTestId("MoreVertIcon")).toBeInTheDocument();
   });
+
+  // #6 縦型でも同じ情報と操作を出す
+  it("shows the same information in the vertical variant", () => {
+    renderWithProviders(
+      <SongCard song={song} queue={queue} variant="vertical" />
+    );
+    expect(screen.getByText("天体観測")).toBeInTheDocument();
+    expect(screen.getByText(/BUMP OF CHICKEN/)).toBeInTheDocument();
+    expect(screen.getByTestId("MoreVertIcon")).toBeInTheDocument();
+  });
+
+  // #7 縦型はサムネを幅いっぱいに使う（横型は固定幅）
+  it("lets the thumbnail span the full width in the vertical variant", () => {
+    const { container } = renderWithProviders(
+      <SongCard song={song} queue={queue} variant="vertical" />
+    );
+    const img = container.querySelector("img")!;
+    expect(getComputedStyle(img).width).toBe("100%");
+  });
+
+  // #8 縦型でもクリックで再生する
+  it("plays the song when the vertical variant is clicked", async () => {
+    const user = userEvent.setup();
+    renderWithProviders(
+      <SongCard song={song} queue={queue} variant="vertical" />
+    );
+    await user.click(screen.getByText("天体観測"));
+    expect(usePlayerStore.getState().isPlaying).toBe(true);
+  });
 });

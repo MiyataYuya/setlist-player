@@ -43,7 +43,7 @@ test.describe("配信カレンダー", () => {
 
     // 7. 選択日の配信カードを展開すると曲が出る
     const streamCard = page
-      .locator('[role="button"]')
+      .getByRole("button")
       .filter({ has: page.locator("img") })
       .first();
     await streamCard.click();

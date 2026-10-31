@@ -34,3 +34,27 @@ describe("layoutStore", () => {
     expect(useLayoutStore.getState().playerPaneWidth).toBe(401);
   });
 });
+
+describe("layoutStore の表示モード", () => {
+  beforeEach(() => {
+    useLayoutStore.setState({ songViewMode: null });
+  });
+
+  // 未設定なら null（画面幅から決める側に委ねる）
+  it("starts with no explicit view mode", () => {
+    expect(useLayoutStore.getState().songViewMode).toBeNull();
+  });
+
+  // 明示的に設定できる
+  it("stores the chosen view mode", () => {
+    useLayoutStore.getState().setSongViewMode("grid");
+    expect(useLayoutStore.getState().songViewMode).toBe("grid");
+  });
+
+  // 上書きできる
+  it("overwrites a previously chosen mode", () => {
+    useLayoutStore.getState().setSongViewMode("grid");
+    useLayoutStore.getState().setSongViewMode("list");
+    expect(useLayoutStore.getState().songViewMode).toBe("list");
+  });
+});

@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { closePlayerOverlay } from "./helpers";
 
 // 5.2 配信モードの閲覧と再生
 test.describe("配信モードの閲覧と再生", () => {
@@ -17,7 +18,12 @@ test.describe("配信モードの閲覧と再生", () => {
     await expect(page.getByText(/\d+ 曲/).first()).toBeVisible();
 
     // 4. 配信カードをクリック → 曲一覧が展開
-    const streamCard = page.locator('[role="button"]').filter({ has: page.locator("img") }).first();
+    // ホーム上部のセクションにも曲カードがあるため、配信一覧の中に限定する
+    const streamCard = page
+      .getByTestId("stream-list")
+      .getByRole("button")
+      .filter({ has: page.locator("img") })
+      .first();
     await streamCard.click();
 
     // 展開後に曲リストが表示される
@@ -27,12 +33,11 @@ test.describe("配信モードの閲覧と再生", () => {
 
     // 5. 展開内の曲をクリック → 再生開始
     // 展開された曲リスト内の最初の曲をクリック
-    const expandedSongs = page.locator('[class*="MuiCollapse"]').locator('[role="button"]').filter({ has: page.locator("img") });
+    const expandedSongs = page.locator('[class*="MuiCollapse"]').getByRole("button").filter({ has: page.locator("img") });
     if (await expandedSongs.count() > 0) {
       await expandedSongs.first().click();
-      // MiniPlayerが表示される
-      const miniPlayer = page.locator("css=[class*='MuiPaper-elevation4']");
-      await expect(miniPlayer).toBeVisible();
+      // 再生画面が開く。閉じると MiniPlayer が表示される
+      await closePlayerOverlay(page);
     }
 
     // 7. 再度クリック → 折りたたみ
@@ -49,11 +54,13 @@ test.describe("配信モードの閲覧と再生", () => {
     await expect(page.getByText(/\d+ 配信/)).toBeVisible();
 
     // 6. ▶ボタンをクリック → 配信の最初の曲から再生開始
-    const playButton = page.locator('[data-testid="PlayArrowIcon"]').first();
+    const playButton = page
+      .getByTestId("stream-list")
+      .locator('[data-testid="PlayArrowIcon"]')
+      .first();
     await playButton.click();
 
-    // MiniPlayerが表示される
-    const miniPlayer = page.locator("css=[class*='MuiPaper-elevation4']");
-    await expect(miniPlayer).toBeVisible();
+    // 再生画面が開く。閉じると MiniPlayer が表示される
+    await closePlayerOverlay(page);
   });
 });

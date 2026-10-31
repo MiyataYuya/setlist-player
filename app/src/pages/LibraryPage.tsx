@@ -1,10 +1,7 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import Avatar from "@mui/material/Avatar";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
-import Card from "@mui/material/Card";
-import CardActionArea from "@mui/material/CardActionArea";
 import Collapse from "@mui/material/Collapse";
 import Dialog from "@mui/material/Dialog";
 import DialogActions from "@mui/material/DialogActions";
@@ -18,12 +15,11 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import SongList from "../components/songs/SongList";
+import PlaylistTile from "../components/home/PlaylistTile";
 import { useLibraryStore } from "../stores/libraryStore";
 import { useHistoryStore } from "../stores/historyStore";
 import { usePlaylistStore } from "../stores/playlistStore";
-import { songPerformances } from "../data/songs";
-
-const spMap = new Map(songPerformances.map((s) => [s.performanceId, s]));
+import { songPerformances, songPerformanceById } from "../data/songs";
 
 export default function LibraryPage() {
   const navigate = useNavigate();
@@ -54,7 +50,7 @@ export default function LibraryPage() {
     () =>
       history
         .slice(0, 50)
-        .map((h) => spMap.get(h.performanceId))
+        .map((h) => songPerformanceById.get(h.performanceId))
         .filter(Boolean) as typeof songPerformances,
     [history]
   );
@@ -83,31 +79,11 @@ export default function LibraryPage() {
           </Typography>
         ) : (
           <Box sx={{ display: "flex", gap: 1.5, overflowX: "auto", pb: 1 }}>
-            {playlists.map((pl) => {
-              const firstSong = pl.performanceIds.length > 0
-                ? spMap.get(pl.performanceIds[0])
-                : undefined;
-              return (
-                <Card key={pl.id} sx={{ minWidth: 140, flexShrink: 0 }}>
-                  <CardActionArea
-                    onClick={() => navigate(`/playlist/${pl.id}`)}
-                    sx={{ p: 1.5, display: "flex", flexDirection: "column", alignItems: "center", gap: 1 }}
-                  >
-                    <Avatar
-                      variant="rounded"
-                      src={firstSong?.thumbnailUrl}
-                      sx={{ width: 56, height: 42 }}
-                    />
-                    <Typography variant="body2" fontWeight="bold" noWrap sx={{ maxWidth: 120 }}>
-                      {pl.name}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      {pl.performanceIds.length}曲
-                    </Typography>
-                  </CardActionArea>
-                </Card>
-              );
-            })}
+            {playlists.map((pl) => (
+              <Box key={pl.id} sx={{ width: 190, flexShrink: 0 }}>
+                <PlaylistTile playlist={pl} />
+              </Box>
+            ))}
           </Box>
         )}
       </Box>

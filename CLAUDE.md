@@ -135,7 +135,9 @@ MUI v7 ダークテーマ。テーマ定義は `src/theme.ts`。日本語フォ�
 - ストア: `use*Store` 命名、Zustandセレクタで購読を最小化
 - ベースURL: `/setlist-player/` (GitHub Pages デプロイ)
 - デプロイ: `release/*` ブランチへのpushで GitHub Actions → GitHub Pages
-- DB更新ごとに `app/package.json` の `version` パッチを +1（`package-lock.json` の2箇所も揃える）。ベースライン `1.0.0`
+- バージョン採番（`app/package.json` の `version`、`package-lock.json` の先頭2箇所も揃える）。ベースライン `1.0.0`
+  - DB更新: パッチを +1
+  - 機能追加: マイナーを +1（パッチは 0 に戻す）
 - 日付: CSVの `published_at` はUTC。表示・日付の区切りは **JST固定**で `src/data/jstDate.ts` を通す（閲覧者のTZで配信日が変わらないように）。Vitestは JST でも UTC でもない `TZ=America/Los_Angeles` で走らせ、「JST指定漏れ」と「`Date.UTC` で組んだ日付をローカルのフィールドで読む」両方のTZ依存バグを検出する
 - 無限スクロール: `useInfiniteScroll` フック + IntersectionObserver
 - 検索デバウンス: `useDebouncedValue` (500ms)

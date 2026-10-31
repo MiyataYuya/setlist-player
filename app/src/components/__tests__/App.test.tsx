@@ -182,3 +182,18 @@ describe("App responsive shell", () => {
     pushSpy.mockRestore();
   });
 });
+
+describe("App routes", () => {
+  afterEach(() => {
+    window.history.pushState({}, "", "/");
+  });
+
+  it("renders the calendar page on /calendar", () => {
+    setMatchMedia(false);
+    window.history.pushState({}, "", "/calendar");
+    renderApp();
+    expect(
+      screen.getByRole("heading", { name: "カレンダー" })
+    ).toBeInTheDocument();
+  });
+});

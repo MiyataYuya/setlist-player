@@ -4,6 +4,7 @@ import BottomNav from "./components/layout/BottomNav";
 import SideNav from "./components/layout/SideNav";
 import MiniPlayer from "./components/layout/MiniPlayer";
 import HomePage from "./pages/HomePage";
+import CalendarPage from "./pages/CalendarPage";
 import SearchPage from "./pages/SearchPage";
 import LibraryPage from "./pages/LibraryPage";
 import PlayerBody from "./components/player/PlayerBody";
@@ -111,6 +112,7 @@ function AppContent() {
         <FadeRoutes>
           <Routes>
             <Route path="/" element={<HomePage />} />
+            <Route path="/calendar" element={<CalendarPage />} />
             <Route path="/search" element={<SearchPage />} />
             <Route path="/library" element={<LibraryPage />} />
             <Route path="/playlist/:id" element={<PlaylistPage />} />

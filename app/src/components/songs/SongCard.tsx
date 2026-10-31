@@ -15,6 +15,7 @@ import PlaylistAddIcon from "@mui/icons-material/PlaylistAdd";
 import { usePlayerStore } from "../../stores/playerStore";
 import { useLibraryStore } from "../../stores/libraryStore";
 import AddToPlaylistDialog from "../playlist/AddToPlaylistDialog";
+import { formatJstDate } from "../../data/jstDate";
 import type { SongPerformance } from "../../data/types";
 
 interface Props {
@@ -30,9 +31,7 @@ export default function SongCard({ song, queue }: Props) {
   const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null);
   const [playlistDialogOpen, setPlaylistDialogOpen] = useState(false);
 
-  const date = song.publishedAt
-    ? new Date(song.publishedAt).toLocaleDateString("ja-JP")
-    : "";
+  const date = formatJstDate(song.publishedAt);
 
   const secondary = [song.artist, date].filter(Boolean).join(" ・ ");
 

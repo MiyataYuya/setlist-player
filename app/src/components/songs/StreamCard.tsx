@@ -10,6 +10,7 @@ import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import type { Stream } from "../../data/types";
+import { formatJstDate } from "../../data/jstDate";
 import { usePlayerStore } from "../../stores/playerStore";
 import SongList from "./SongList";
 
@@ -21,9 +22,7 @@ export default function StreamCard({ stream }: Props) {
   const [open, setOpen] = useState(false);
   const playSong = usePlayerStore((s) => s.playSong);
 
-  const date = stream.publishedAt
-    ? new Date(stream.publishedAt).toLocaleDateString("ja-JP")
-    : "";
+  const date = formatJstDate(stream.publishedAt);
 
   // タイトルから定型句を除去して短くする
   const displayTitle = stream.title

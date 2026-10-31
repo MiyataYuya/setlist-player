@@ -13,6 +13,7 @@ import SeekBar from "./SeekBar";
 import FavoriteButton from "../common/FavoriteButton";
 import TagManager from "../songs/TagManager";
 import { usePlayerStore, useCurrentSong } from "../../stores/playerStore";
+import { formatJstDate } from "../../data/jstDate";
 
 interface PlayerBodyProps {
   variant: "overlay" | "panel";
@@ -47,9 +48,7 @@ export default function PlayerBody({ variant }: PlayerBodyProps) {
     );
   }
 
-  const date = currentSong.publishedAt
-    ? new Date(currentSong.publishedAt).toLocaleDateString("ja-JP")
-    : "";
+  const date = formatJstDate(currentSong.publishedAt);
 
   return (
     <Box

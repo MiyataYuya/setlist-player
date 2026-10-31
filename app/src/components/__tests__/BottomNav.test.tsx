@@ -3,12 +3,13 @@ import { renderWithRoute, screen } from "../../test/helpers";
 import BottomNav from "../layout/BottomNav";
 
 describe("BottomNav", () => {
-  // #1 3 tabs
-  it("displays 3 tabs: ホーム, 検索, ライブラリ", () => {
+  // #1 4 tabs, カレンダーはホームと検索の間
+  it("displays 4 tabs in order: ホーム, カレンダー, 検索, ライブラリ", () => {
     renderWithRoute(<BottomNav />, ["/"]);
-    expect(screen.getByText("ホーム")).toBeInTheDocument();
-    expect(screen.getByText("検索")).toBeInTheDocument();
-    expect(screen.getByText("ライブラリ")).toBeInTheDocument();
+    const labels = screen
+      .getAllByRole("button")
+      .map((tab) => tab.textContent);
+    expect(labels).toEqual(["ホーム", "カレンダー", "検索", "ライブラリ"]);
   });
 
   // #3 active state

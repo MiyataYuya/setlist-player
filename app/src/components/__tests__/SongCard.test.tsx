@@ -37,18 +37,18 @@ describe("SongCard", () => {
     expect(screen.getByText("天体観測")).toBeInTheDocument();
   });
 
-  // #2 artist + date
-  it("displays artist and date", () => {
+  // #2 artist + date（日付は閲覧者のTZではなくJST。19:00Z は JST では翌日）
+  it("displays artist and the JST date", () => {
     renderWithProviders(<SongCard song={song} queue={queue} />);
     expect(screen.getByText(/BUMP OF CHICKEN/)).toBeInTheDocument();
-    expect(screen.getByText(/2024/)).toBeInTheDocument();
+    expect(screen.getByText(/2024\/1\/16/)).toBeInTheDocument();
   });
 
   // #3 empty artist
   it("shows only date when artist is empty", () => {
     renderWithProviders(<SongCard song={songNoArtist} queue={queue} />);
     expect(screen.queryByText(/BUMP/)).not.toBeInTheDocument();
-    expect(screen.getByText(/2024/)).toBeInTheDocument();
+    expect(screen.getByText(/2024\/1\/16/)).toBeInTheDocument();
   });
 
   // #4 click plays song

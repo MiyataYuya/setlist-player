@@ -56,10 +56,10 @@ describe("StreamCard", () => {
     expect(allDateTexts.length).toBeGreaterThanOrEqual(1);
   });
 
-  // #3 date and song count
-  it("shows date and song count", () => {
+  // #3 date and song count（日付は閲覧者のTZではなくJST。19:00Z は JST では翌日）
+  it("shows the JST date and song count", () => {
     renderWithProviders(<StreamCard stream={stream} />);
-    expect(screen.getByText(/2 曲/)).toBeInTheDocument();
+    expect(screen.getByText(/2024\/1\/16 ・ 2 曲/)).toBeInTheDocument();
   });
 
   // #4 expand/collapse

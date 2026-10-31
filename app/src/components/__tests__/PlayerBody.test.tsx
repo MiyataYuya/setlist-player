@@ -19,6 +19,12 @@ describe("PlayerBody", () => {
     ).toBeInTheDocument();
   });
 
+  // 日付は閲覧者のタイムゾーンではなくJSTで表示する（19:00Z は JST では翌日）
+  it("shows the published date in JST", () => {
+    renderWithProviders(<PlayerBody variant="overlay" />);
+    expect(screen.getByText(/2024\/1\/16/)).toBeInTheDocument();
+  });
+
   it("shows a close button in overlay variant", () => {
     renderWithProviders(<PlayerBody variant="overlay" />);
     expect(screen.getByTestId("player-close")).toBeInTheDocument();

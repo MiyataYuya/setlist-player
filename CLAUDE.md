@@ -107,7 +107,7 @@ CSVファイル → Viteカスタムプラグイン（ビルド時パース） �
 
 ### ルーティング (React Router v7)
 
-ルートは4つ: `/` (Home), `/search`, `/library`, `/playlist/:id` (`App.tsx`)
+ルートは5つ: `/` (Home), `/calendar`, `/search`, `/library`, `/playlist/:id` (`App.tsx`)。ナビ項目は `components/layout/navItems.tsx` の `NAV_ITEMS` 一箇所で定義し、`BottomNav`/`SideNav` が共用する
 
 再生画面の中身は `PlayerBody`（`variant: "overlay" | "panel"`）。**ルートではない**。モバイルでは `playerStore.isPlayerOpen` で制御するフルスクリーンオーバーレイ（`translateY` でスライド、`variant="overlay"`）、PCでは右カラムに常設（`variant="panel"`）。
 
@@ -136,6 +136,7 @@ MUI v7 ダークテーマ。テーマ定義は `src/theme.ts`。日本語フォ�
 - ベースURL: `/setlist-player/` (GitHub Pages デプロイ)
 - デプロイ: `release/*` ブランチへのpushで GitHub Actions → GitHub Pages
 - DB更新ごとに `app/package.json` の `version` パッチを +1（`package-lock.json` の2箇所も揃える）。ベースライン `1.0.0`
+- 日付: CSVの `published_at` はUTC。表示・日付の区切りは **JST固定**で `src/data/jstDate.ts` を通す（閲覧者のTZで配信日が変わらないように）。Vitestは JST でも UTC でもない `TZ=America/Los_Angeles` で走らせ、「JST指定漏れ」と「`Date.UTC` で組んだ日付をローカルのフィールドで読む」両方のTZ依存バグを検出する
 - 無限スクロール: `useInfiniteScroll` フック + IntersectionObserver
 - 検索デバウンス: `useDebouncedValue` (500ms)
 - 楽曲自動送り: `useAutoAdvance` フック (endSeconds到達で次曲へ)

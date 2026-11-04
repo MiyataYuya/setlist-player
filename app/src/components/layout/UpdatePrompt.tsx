@@ -1,6 +1,7 @@
 import Button from "@mui/material/Button";
 import Snackbar from "@mui/material/Snackbar";
 import { useRegisterSW } from "virtual:pwa-register/react";
+import { warmCatalogCache } from "../../data/warmCatalogCache";
 
 /**
  * 新しい版の Service Worker が待機中なら知らせる。
@@ -10,7 +11,12 @@ export default function UpdatePrompt() {
   const {
     needRefresh: [needRefresh],
     updateServiceWorker,
-  } = useRegisterSW();
+  } = useRegisterSW({
+    // 初回訪問は未制御で曲データCSVがキャッシュに入らないため、SW 有効化後に入れさせる
+    onRegisteredSW() {
+      void warmCatalogCache();
+    },
+  });
 
   return (
     <Snackbar

@@ -38,4 +38,13 @@ describe("UpdatePrompt", () => {
     await userEvent.click(screen.getByRole("button", { name: "更新" }));
     expect(updateServiceWorker).toHaveBeenCalledWith(true);
   });
+
+  // #4 登録完了時に曲データのキャッシュ温めを呼べるよう onRegisteredSW を渡す
+  it("passes an onRegisteredSW callback to useRegisterSW", () => {
+    mockRegisterSW(false);
+    renderWithProviders(<UpdatePrompt />);
+    expect(useRegisterSW).toHaveBeenCalledWith(
+      expect.objectContaining({ onRegisteredSW: expect.any(Function) })
+    );
+  });
 });

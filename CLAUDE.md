@@ -60,6 +60,7 @@ npm run lint         # ESLint (flat config)
 npm run test         # Vitest 全テスト実行
 npm run test:watch   # Vitest ウォッチモード
 npm run test:e2e     # Playwright E2Eテスト (dev serverを自動起動)
+npm run generate-pwa-assets  # public/icon.svg から PWA アイコンを再生成
 ```
 
 単一テストファイルの実行: `npx vitest run src/stores/__tests__/playerStore.test.ts`

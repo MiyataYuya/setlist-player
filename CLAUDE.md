@@ -87,6 +87,7 @@ uv run build_from_sheet.py                           # data/app_*.csv と公開�
 CSVファイル → Viteプラグイン（dev配信 / build時に `dist/data/` へ出力） → 起動時に取得 → `catalogStore` → アプリ
 
 - `vite.config.ts` の `catalogCsvPlugin` が `app_songs_enriched.csv`, `app_performances.csv`, `app_videos.csv` を `${base}data/` で配る（dev はリポジトリの `data/` を直接返す）
+- CSVのスキーマ互換: アプリ更新の適用前でも、precache済みの旧版アプリは新しくデプロイされたCSVを取得する。列の削除・改名は互換期間なしにデプロイしない（列の追加は安全）
 - 起動時に `CatalogGate` が `catalogStore.load()` → `src/data/loadCatalog.ts`（取得）→ `parseCatalog.ts`（パース）→ `buildCatalog.ts`（結合・集計）。画面は `useCatalog()` で同期的に読む（`CatalogGate` 配下専用）
 - テストは `src/test/setup.ts` が全テストの前に `catalogStore` を `src/test/catalogFixture.ts` の `testCatalog` で ready にする
 - `song_id` は台帳方式の安定採番: 既存IDは `app_songs.csv` を台帳に固定、新曲のみ `max+1` を末尾採番（欠番許容）。配信追加時の `data/` 差分は**純追加（deletions=0）が正常**で、既存IDシフトが出たら回帰
@@ -125,7 +126,7 @@ MUI v7 ダークテーマ。テーマ定義は `src/theme.ts`。日本語フォ�
 
 ### PWA
 
-`vite-plugin-pwa`（generateSW, `registerType: "prompt"`）。アプリ本体を precache し、`data/*.csv` のみ NetworkFirst（5秒でキャッシュへフォールバック、キャッシュ名 `catalog-csv`）。**YouTube 由来（埋め込み・サムネイル・IFrame API）はキャッシュしない**（配信者の権利保護）。新版は `UpdatePrompt` の「更新」で適用し自動リロードしない。起動時に `requestPersistentStorage()` で永続化を要求。dev では SW は無効。
+`vite-plugin-pwa`（generateSW, `registerType: "prompt"`）。アプリ本体を precache し、`data/*.csv` のみ NetworkFirst（5秒でキャッシュへフォールバック、キャッシュ名 `catalog-csv`）。**YouTube 由来（埋め込み・サムネイル・IFrame API）はキャッシュしない**（配信者の権利保護）。新版は `UpdatePrompt` の「更新」で適用し自動リロードしない。ホーム画面に追加して起動（standalone）したときだけ `requestPersistentStorage()` で永続化を要求。初回訪問は SW 未制御で曲データCSVがキャッシュに入らないため、`warmCatalogCache()` が Workbox の `CACHE_URLS` メッセージで入れさせる。dev では SW は無効。
 
 ## Testing Patterns
 

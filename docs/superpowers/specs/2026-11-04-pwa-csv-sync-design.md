@@ -33,7 +33,7 @@
 
 | ファイル | 責務 |
 |---|---|
-| `parseCatalog.ts` | `parseSongsCsv` / `parsePerformancesCsv` / `parseVideosCsv`: CSV 文字列 → `Song[]` / `Performance[]` / `Video[]`。現 `csvDataPlugin` の変換ロジック（空行除外、数値化、`view_count` 等の `\|\| 0`）をそのまま移す |
+| `parseCatalog.ts` | `parseSongsCsv` / `parsePerformancesCsv` / `parseVideosCsv`: CSV 文字列 → `Song[]` / `Performance[]` / `Video[]`。現 `csvDataPlugin` の変換ロジック（空行除外、数値化、`view_count` 等の `\|\| 0`）をそのまま移す。加えて必須列がヘッダーに無ければ throw（HTML 等の誤応答を空データとして黙って通さない） |
 | `buildCatalog.ts` | `buildCatalog({ songs, performances, videos }): Catalog`。現 `songs.ts` のモジュールトップレベル計算と `calendar.ts` の `streamsByDate` / `streamDateKeys` / `calendarMonths` を純関数化 |
 | `loadCatalog.ts` | `loadCatalog(fetchFn = fetch): Promise<Catalog>`。`${import.meta.env.BASE_URL}data/<name>.csv` を `{ cache: "no-cache" }` で並列取得（ETag 再検証で古い HTTP キャッシュを掴まない）。いずれかが失敗（例外 or `!res.ok`）なら reject |
 
@@ -60,6 +60,7 @@ interface Catalog {
 
 ```ts
 type CatalogState =
+  | { status: "idle"; catalog: null; error: null }      // 未開始（StrictMode の二重 effect で二重取得しないための判定に使う）
   | { status: "loading"; catalog: null; error: null }
   | { status: "ready"; catalog: Catalog; error: null }
   | { status: "error"; catalog: null; error: Error };
@@ -70,7 +71,7 @@ type CatalogState =
 
 ### 表示 `CatalogGate`（`app/src/components/layout/CatalogGate.tsx`）
 
-- マウント時に `status === "loading"` かつ未開始なら `load()`
+- マウント時に `status === "idle"` なら `load()`（idle / loading はどちらも読み込み中表示）
 - loading: 中央に `CircularProgress`
 - error: 「曲データを読み込めませんでした」＋「再試行」ボタン（`load()` を再実行）
 - ready: `children` を描画
@@ -114,7 +115,7 @@ type CatalogState =
 - `registerType: "prompt"`。新 SW が待機状態になったら Snackbar「新しいバージョンがあります」＋「更新」ボタン
 - 「更新」で `updateSW(true)`（skipWaiting → リロード）。自動リロードはしない（再生を中断しない）
 - 無視した場合も次回起動（全タブ終了後）で新版に切り替わる
-- `UpdatePrompt` コンポーネントは `virtual:pwa-register/react` の `useRegisterSW` を使う。テストでは同モジュールを `vi.mock` で差し替える
+- `UpdatePrompt` コンポーネントは `virtual:pwa-register/react` の `useRegisterSW` を使う。Vitest は PWA プラグインを読まないため、`vitest.config.ts` の alias で同モジュールを `src/test/__mocks__/pwaRegisterReact.ts`（`vi.fn` のスタブ）に向ける
 
 ### ストレージ永続化
 
@@ -130,7 +131,7 @@ type CatalogState =
 
 | 対象 | 主なケース |
 |---|---|
-| `parseCatalog` | 型変換 / 空行除外 / 数値化 / 欠損数値は 0 |
+| `parseCatalog` | 型変換 / 空行除外 / 数値化 / 欠損数値は 0 / 必須列欠落で throw |
 | `buildCatalog` | 現 `songs.test.ts` と `calendar.test.ts` のモジュール値に対するケースを移植（結合・降順・日付グルーピング・月範囲）|
 | `loadCatalog` | 3 URL を `BASE_URL` 付きで取得 / `cache: "no-cache"` / 1 つでも `!ok` や例外なら reject |
 | `catalogStore` | loading → ready / loading → error / error から再試行で ready |
@@ -139,7 +140,7 @@ type CatalogState =
 
 ### 既存テストの調整
 
-- `src/test/__mocks__/virtual*.ts` → `src/test/fixtures/catalog.ts`（生データ＋`buildCatalog` 済みの `testCatalog`）
+- `src/test/__mocks__/virtual*.ts` → `src/test/catalogFixture.ts`（既存の `src/test/fixtures.ts` と名前解決が衝突しないよう別名）（生データ＋`buildCatalog` 済みの `testCatalog`）
 - `src/test/setup.ts` の `beforeEach` で `catalogStore` を `ready(testCatalog)` にする。既存コンポーネントテストはほぼ無改修。ゲート自体のテストは個別に loading/error へ上書き
 - テストのTZは従来どおり `America/Los_Angeles`
 
@@ -161,6 +162,6 @@ type CatalogState =
 
 ## 影響範囲
 
-- 追加: `src/data/{parseCatalog,buildCatalog,loadCatalog}.ts`, `src/stores/catalogStore.ts`, `src/components/layout/{CatalogGate,UpdatePrompt}.tsx`, `src/test/fixtures/catalog.ts`, `public/icon.svg` と生成アイコン, 各テスト
+- 追加: `src/data/{parseCatalog,buildCatalog,loadCatalog}.ts`, `src/stores/catalogStore.ts`, `src/components/layout/{CatalogGate,UpdatePrompt}.tsx`, `src/test/catalogFixture.ts`, `public/icon.svg` と生成アイコン, 各テスト
 - 変更: `vite.config.ts`, `vitest.config.ts`, `vite-env.d.ts`, `index.html`, `main.tsx`, `App.tsx`, `data/calendar.ts`, `data/types.ts`, 利用側 7 ファイル, `test/setup.ts`, `package.json`, `CLAUDE.md`
 - 削除: `src/data/songs.ts`, `src/test/__mocks__/virtual*.ts`

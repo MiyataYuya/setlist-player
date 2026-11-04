@@ -2,9 +2,9 @@ import { describe, it, expect, beforeEach } from "vitest";
 import { renderWithProviders, screen, setMatchMedia } from "../../test/helpers";
 import SongList from "../songs/SongList";
 import { useLayoutStore } from "../../stores/layoutStore";
-import { songPerformances } from "../../data/songs";
+import { testCatalog } from "../../test/catalogFixture";
 
-const songs = songPerformances.slice(0, 1);
+const songs = testCatalog.songPerformances.slice(0, 1);
 
 function gridColumns(container: HTMLElement): string {
   const grid = container.querySelector("div")!;

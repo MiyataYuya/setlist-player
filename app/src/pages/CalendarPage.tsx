@@ -6,14 +6,12 @@ import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import MonthGrid from "../components/calendar/MonthGrid";
 import StreamList from "../components/songs/StreamList";
-import {
-  calendarMonths,
-  latestStreamDateInMonth,
-  streamsByDate,
-} from "../data/calendar";
+import { latestStreamDateInMonth } from "../data/calendar";
+import { useCatalog } from "../stores/catalogStore";
 import { formatDateKeyLabel, formatMonthKeyLabel } from "../data/jstDate";
 
 export default function CalendarPage() {
+  const { calendarMonths, streamsByDate, streamDateKeys } = useCatalog();
   const [monthIndex, setMonthIndex] = useState(calendarMonths.length - 1);
   // 日を選ぶまでは「その月の最新配信日」が既定。月を移動したら既定に戻す。
   const [pickedDate, setPickedDate] = useState<string | null>(null);
@@ -21,7 +19,7 @@ export default function CalendarPage() {
   const hasMonths = calendarMonths.length > 0;
   const monthKey = calendarMonths[monthIndex] ?? "";
   const selectedDate = hasMonths
-    ? pickedDate ?? latestStreamDateInMonth(monthKey)
+    ? pickedDate ?? latestStreamDateInMonth(monthKey, streamDateKeys)
     : null;
 
   const goToMonth = (nextIndex: number) => {

@@ -37,7 +37,7 @@ song_performances.csv  (公開用)
 
 ### アプリ用データ
 
-アプリ（`app/`）が `vite.config.ts` の `csvDataPlugin` 経由で読み込むファイル群。
+アプリ（`app/`）が起動時に取得するファイル群。デプロイ時に `vite.config.ts` の `catalogCsvPlugin` がサイトの `data/` に配置する。
 
 #### `app_songs_enriched.csv` — 曲マスタ
 

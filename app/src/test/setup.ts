@@ -1,5 +1,7 @@
 import "@testing-library/jest-dom/vitest";
-import { afterEach } from "vitest";
+import { afterEach, beforeEach } from "vitest";
+import { useCatalogStore } from "../stores/catalogStore";
+import { testCatalog } from "./catalogFixture";
 
 // Mock IntersectionObserver
 class MockIntersectionObserver {
@@ -83,3 +85,16 @@ afterEach(() => {
 
 // jsdom は scrollIntoView を実装していないためスタブ
 Element.prototype.scrollIntoView = () => {};
+
+// 画面は CatalogGate 配下で読み込み完了後に描画される。各テストは
+// 「読み込み済み」から始め、ゲート自体のテストだけ個別に状態を上書きする。
+// load はゲートのテストで差し替えるため、毎回本物に戻す。
+const realLoad = useCatalogStore.getState().load;
+beforeEach(() => {
+  useCatalogStore.setState({
+    status: "ready",
+    catalog: testCatalog,
+    error: null,
+    load: realLoad,
+  });
+});

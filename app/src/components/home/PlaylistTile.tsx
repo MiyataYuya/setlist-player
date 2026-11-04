@@ -3,7 +3,7 @@ import CardActionArea from "@mui/material/CardActionArea";
 import Typography from "@mui/material/Typography";
 import QueueMusicIcon from "@mui/icons-material/QueueMusic";
 import { useNavigate } from "react-router-dom";
-import { songPerformanceById } from "../../data/songs";
+import { useCatalog } from "../../stores/catalogStore";
 import { CARD_THUMBNAIL_WIDTH } from "../songs/cardGrid";
 import type { CardVariant } from "../songs/cardGrid";
 import type { Playlist } from "../../stores/playlistStore";
@@ -16,6 +16,7 @@ interface Props {
 
 export default function PlaylistTile({ playlist, variant = "vertical" }: Props) {
   const navigate = useNavigate();
+  const { songPerformanceById } = useCatalog();
   const firstSong = songPerformanceById.get(playlist.performanceIds[0]);
   const isVertical = variant === "vertical";
 

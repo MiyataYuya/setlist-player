@@ -2,9 +2,9 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 import { renderWithProviders, screen, userEvent } from "../../test/helpers";
 import PlayerBody from "../player/PlayerBody";
 import { usePlayerStore } from "../../stores/playerStore";
-import { songPerformances } from "../../data/songs";
+import { testCatalog } from "../../test/catalogFixture";
 
-const sample = songPerformances[0];
+const sample = testCatalog.songPerformances[0];
 
 describe("PlayerBody", () => {
   beforeEach(() => {

@@ -11,18 +11,17 @@ process.env.TZ = "America/Los_Angeles";
 
 export default defineConfig({
   plugins: [react()],
+  resolve: {
+    alias: {
+      // Vitest は PWA プラグインを読まないため、仮想モジュールをスタブに向ける
+      "virtual:pwa-register/react": path.join(mocksDir, "pwaRegisterReact.ts"),
+    },
+  },
   test: {
     environment: "jsdom",
     setupFiles: ["./src/test/setup.ts"],
     globals: true,
     css: false,
     exclude: ["e2e/**", "node_modules/**"],
-  },
-  resolve: {
-    alias: {
-      "virtual:songs": path.join(mocksDir, "virtualSongs.ts"),
-      "virtual:performances": path.join(mocksDir, "virtualPerformances.ts"),
-      "virtual:videos": path.join(mocksDir, "virtualVideos.ts"),
-    },
   },
 });

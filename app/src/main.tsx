@@ -4,6 +4,9 @@ import { ThemeProvider } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
 import theme from "./theme";
 import App from "./App";
+import { requestPersistentStorage } from "./stores/requestPersistentStorage";
+
+void requestPersistentStorage();
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

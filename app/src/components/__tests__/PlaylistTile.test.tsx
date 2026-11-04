@@ -2,15 +2,15 @@ import { describe, it, expect } from "vitest";
 import { renderWithProviders, screen, userEvent } from "../../test/helpers";
 import LocationDisplay from "../../test/LocationDisplay";
 import PlaylistTile from "../home/PlaylistTile";
-import { songPerformances } from "../../data/songs";
+import { testCatalog } from "../../test/catalogFixture";
 import type { Playlist } from "../../stores/playlistStore";
 
-const firstSong = songPerformances[0];
+const firstSong = testCatalog.songPerformances[0];
 
 const playlist: Playlist = {
   id: "pl-1",
   name: "作業BGM",
-  performanceIds: [firstSong.performanceId, songPerformances[1].performanceId],
+  performanceIds: [firstSong.performanceId, testCatalog.songPerformances[1].performanceId],
 };
 
 const emptyPlaylist: Playlist = {

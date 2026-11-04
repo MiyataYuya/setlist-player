@@ -14,6 +14,7 @@ import { useCurrentSong, usePlayerStore } from "./stores/playerStore";
 import { useIsDesktop } from "./hooks/useIsDesktop";
 import ResizeHandle from "./components/layout/ResizeHandle";
 import CatalogGate from "./components/layout/CatalogGate";
+import UpdatePrompt from "./components/layout/UpdatePrompt";
 import { useLayoutStore } from "./stores/layoutStore";
 import { useState, useEffect, useRef } from "react";
 import type { ReactNode } from "react";
@@ -175,6 +176,8 @@ function App() {
       <CatalogGate>
         <AppContent />
       </CatalogGate>
+      {/* データ読み込みに失敗していても更新は適用できるよう CatalogGate の外に置く */}
+      <UpdatePrompt />
     </BrowserRouter>
   );
 }

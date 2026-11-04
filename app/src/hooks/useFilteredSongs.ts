@@ -1,9 +1,10 @@
 import { useMemo } from "react";
-import { songPerformances } from "../data/songs";
+import { useCatalog } from "../stores/catalogStore";
 import { useLibraryStore } from "../stores/libraryStore";
 import type { SongPerformance } from "../data/types";
 
 export function useFilteredSongs(): SongPerformance[] {
+  const { songPerformances } = useCatalog();
   const searchQuery = useLibraryStore((s) => s.searchQuery);
 
   return useMemo(() => {
@@ -15,5 +16,5 @@ export function useFilteredSongs(): SongPerformance[] {
         s.title.toLowerCase().includes(q) ||
         s.artist.toLowerCase().includes(q)
     );
-  }, [searchQuery]);
+  }, [songPerformances, searchQuery]);
 }

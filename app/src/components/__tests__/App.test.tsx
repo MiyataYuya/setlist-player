@@ -6,7 +6,7 @@ import theme from "../../theme";
 import App from "../../App";
 import { usePlayerStore } from "../../stores/playerStore";
 import { useLayoutStore } from "../../stores/layoutStore";
-import { songPerformances } from "../../data/songs";
+import { testCatalog } from "../../test/catalogFixture";
 
 // react-youtube は実ブラウザの IFrame API を要するため、videoId を観測できる
 // 軽量プレースホルダに差し替える。これにより YouTubeEmbed が生成時に渡す
@@ -74,7 +74,7 @@ describe("App responsive shell", () => {
 
   it("PCで最初に選んだ曲が正しい videoId でプレイヤーにマウントされる", async () => {
     setMatchMedia(true);
-    const sample = songPerformances[0];
+    const sample = testCatalog.songPerformances[0];
 
     renderApp(); // 曲なしでマウント（PCではプレイヤー枠が常設される）
     // 曲未選択ではプレイヤー本体（iframe）はマウントしない
@@ -97,7 +97,7 @@ describe("App responsive shell", () => {
     const backSpy = vi
       .spyOn(window.history, "back")
       .mockImplementation(() => {});
-    const sample = songPerformances[0];
+    const sample = testCatalog.songPerformances[0];
 
     const { rerender } = renderApp();
     await act(async () => {
@@ -122,7 +122,7 @@ describe("App responsive shell", () => {
 
   it("PCへ切り替えても、合成エントリが最上段でなければ履歴を触らない", async () => {
     setMatchMedia(false);
-    const sample = songPerformances[0];
+    const sample = testCatalog.songPerformances[0];
 
     const { rerender } = renderApp();
     await act(async () => {
@@ -154,7 +154,7 @@ describe("App responsive shell", () => {
   it("pushes at most one history entry per player-open session on mobile", async () => {
     setMatchMedia(false);
     const pushSpy = vi.spyOn(window.history, "pushState");
-    const sample = songPerformances[0];
+    const sample = testCatalog.songPerformances[0];
 
     renderApp();
     // 再生開始 → isPlayerOpen=true（1回push）

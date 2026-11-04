@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from "vitest";
 import { renderHook, act } from "@testing-library/react";
 import { useFilteredSongs } from "../useFilteredSongs";
 import { useLibraryStore } from "../../stores/libraryStore";
-import { songPerformances } from "../../data/songs";
+import { testCatalog } from "../../test/catalogFixture";
 
 describe("useFilteredSongs", () => {
   beforeEach(() => {
@@ -12,7 +12,7 @@ describe("useFilteredSongs", () => {
   // #1 empty query returns all
   it("returns all performances when query is empty", () => {
     const { result } = renderHook(() => useFilteredSongs());
-    expect(result.current).toEqual(songPerformances);
+    expect(result.current).toEqual(testCatalog.songPerformances);
   });
 
   // #2 title search

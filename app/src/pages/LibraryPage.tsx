@@ -19,9 +19,11 @@ import PlaylistTile from "../components/home/PlaylistTile";
 import { useLibraryStore } from "../stores/libraryStore";
 import { useHistoryStore } from "../stores/historyStore";
 import { usePlaylistStore } from "../stores/playlistStore";
-import { songPerformances, songPerformanceById } from "../data/songs";
+import { useCatalog } from "../stores/catalogStore";
+import type { SongPerformance } from "../data/types";
 
 export default function LibraryPage() {
+  const { songPerformances, songPerformanceById } = useCatalog();
   const navigate = useNavigate();
   const favoriteIds = useLibraryStore((s) => s.favoriteIds);
   const history = useHistoryStore((s) => s.history);
@@ -34,7 +36,7 @@ export default function LibraryPage() {
 
   const favorites = useMemo(
     () => songPerformances.filter((s) => favoriteIds.includes(s.performanceId)),
-    [favoriteIds]
+    [songPerformances, favoriteIds]
   );
 
   function handleCreatePlaylist(): void {
@@ -51,8 +53,8 @@ export default function LibraryPage() {
       history
         .slice(0, 50)
         .map((h) => songPerformanceById.get(h.performanceId))
-        .filter(Boolean) as typeof songPerformances,
-    [history]
+        .filter((s): s is SongPerformance => s !== undefined),
+    [songPerformanceById, history]
   );
 
   return (

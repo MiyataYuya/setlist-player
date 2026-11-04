@@ -5,7 +5,7 @@ import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
 import Chip from "@mui/material/Chip";
 import ShuffleIcon from "@mui/icons-material/Shuffle";
-import { songPerformances, streams } from "../data/songs";
+import { useCatalog } from "../stores/catalogStore";
 import { formatJstDate } from "../data/jstDate";
 import { usePlayerStore } from "../stores/playerStore";
 import { usePlaylistStore } from "../stores/playlistStore";
@@ -30,6 +30,7 @@ type ViewMode = "stream" | "song";
 const GRID_LIMIT = 6;
 
 export default function HomePage() {
+  const { songPerformances, streams } = useCatalog();
   const playSong = usePlayerStore((s) => s.playSong);
   const shuffleQueue = usePlayerStore((s) => s.shuffleQueue);
   // 上限ちょうどしか取らないと「超過しているか」が判定できず、
@@ -82,7 +83,7 @@ export default function HomePage() {
           return b.artist.localeCompare(a.artist, "ja");
       }
     });
-  }, [sortOption, selectedTags]);
+  }, [songPerformances, sortOption, selectedTags]);
 
   function handleToggleTag(tag: string): void {
     setSelectedTags((prev) =>

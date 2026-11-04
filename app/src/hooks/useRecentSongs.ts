@@ -1,10 +1,11 @@
 import { useMemo } from "react";
-import { songPerformanceById } from "../data/songs";
+import { useCatalog } from "../stores/catalogStore";
 import { useHistoryStore } from "../stores/historyStore";
 import type { SongPerformance } from "../data/types";
 
 /** 再生履歴から重複を除いた最近の曲を返す（新しい順、存在しない演奏は除外） */
 export function useRecentSongs(limit = 10): SongPerformance[] {
+  const { songPerformanceById } = useCatalog();
   const history = useHistoryStore((s) => s.history);
 
   return useMemo(() => {
@@ -18,5 +19,5 @@ export function useRecentSongs(limit = 10): SongPerformance[] {
       if (sp) result.push(sp);
     }
     return result;
-  }, [history, limit]);
+  }, [songPerformanceById, history, limit]);
 }

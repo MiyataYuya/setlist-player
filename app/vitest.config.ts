@@ -1,8 +1,5 @@
 import { defineConfig } from "vitest/config";
 import react from "@vitejs/plugin-react";
-import path from "node:path";
-
-const mocksDir = path.resolve(__dirname, "src/test/__mocks__");
 
 // 日付の扱いはJST固定（src/data/jstDate.ts）。JSTでもUTCでもないゾーンで走らせることで、
 // 「JSTを指定し忘れた」と「UTCで組んだ日付をローカルのフィールドで読んだ」の
@@ -17,12 +14,5 @@ export default defineConfig({
     globals: true,
     css: false,
     exclude: ["e2e/**", "node_modules/**"],
-  },
-  resolve: {
-    alias: {
-      "virtual:songs": path.join(mocksDir, "virtualSongs.ts"),
-      "virtual:performances": path.join(mocksDir, "virtualPerformances.ts"),
-      "virtual:videos": path.join(mocksDir, "virtualVideos.ts"),
-    },
   },
 });

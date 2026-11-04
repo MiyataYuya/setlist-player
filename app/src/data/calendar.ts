@@ -1,5 +1,4 @@
-import { streams } from "./songs";
-import { splitMonthKey, toJstDateKey, toMonthKey } from "./jstDate";
+import { splitMonthKey, toJstDateKey } from "./jstDate";
 import type { Stream } from "./types";
 
 /** 配信をJST基準の `YYYY-MM-DD` ごとにまとめる（同日内は開始が早い順） */
@@ -59,24 +58,11 @@ export function buildMonthWeeks(monthKey: string): (string | null)[][] {
   return weeks;
 }
 
-/** JSTの日付 → その日の配信 */
-export const streamsByDate: Map<string, Stream[]> =
-  groupStreamsByJstDate(streams);
-
-/** 配信がある日の `YYYY-MM-DD` 昇順リスト */
-const streamDateKeys: string[] = Array.from(streamsByDate.keys()).sort();
-
-/** 配信のある最古の月から最新の月までの連続した `YYYY-MM` 昇順リスト */
-export const calendarMonths: string[] =
-  streamDateKeys.length === 0
-    ? []
-    : monthRange(
-        toMonthKey(streamDateKeys[0]),
-        toMonthKey(streamDateKeys[streamDateKeys.length - 1])
-      );
-
-/** その月で最も新しい配信日（配信がなければ null） */
-export function latestStreamDateInMonth(monthKey: string): string | null {
+/** その月で最も新しい配信日（配信がなければ null）。streamDateKeys は昇順 */
+export function latestStreamDateInMonth(
+  monthKey: string,
+  streamDateKeys: string[]
+): string | null {
   for (let index = streamDateKeys.length - 1; index >= 0; index--) {
     if (streamDateKeys[index].startsWith(monthKey)) return streamDateKeys[index];
   }

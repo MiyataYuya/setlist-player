@@ -18,10 +18,11 @@ import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import ShuffleIcon from "@mui/icons-material/Shuffle";
 import { usePlaylistStore } from "../stores/playlistStore";
 import { usePlayerStore } from "../stores/playerStore";
-import { songPerformanceById } from "../data/songs";
+import { useCatalog } from "../stores/catalogStore";
 import type { SongPerformance } from "../data/types";
 
 export default function PlaylistPage() {
+  const { songPerformanceById } = useCatalog();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const playlist = usePlaylistStore((s) => s.playlists.find((p) => p.id === id));
@@ -39,7 +40,7 @@ export default function PlaylistPage() {
     return playlist.performanceIds
       .map((pid) => songPerformanceById.get(pid))
       .filter((s): s is SongPerformance => s !== undefined);
-  }, [playlist]);
+  }, [songPerformanceById, playlist]);
 
   if (!playlist) {
     return (

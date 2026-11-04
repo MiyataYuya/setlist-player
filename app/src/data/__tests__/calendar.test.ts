@@ -4,8 +4,6 @@ import {
   monthRange,
   buildMonthWeeks,
   latestStreamDateInMonth,
-  streamsByDate,
-  calendarMonths,
 } from "../calendar";
 import { makeStream } from "../../test/fixtures";
 
@@ -105,24 +103,18 @@ describe("buildMonthWeeks", () => {
   });
 });
 
-describe("calendarMonths / streamsByDate / latestStreamDateInMonth (実データ)", () => {
-  // #11 モック配信（2024-01/02/03）の月が昇順で並ぶ
-  it("covers the months of the available streams in ascending order", () => {
-    expect(calendarMonths).toEqual(["2024-01", "2024-02", "2024-03"]);
-  });
+describe("latestStreamDateInMonth", () => {
+  // 渡した配信日だけを見ること（モジュール内の実データに依存しない）を確かめるため、
+  // フィクスチャに無い年月を使う
+  const dateKeys = ["2025-05-01", "2025-05-20", "2025-07-03"];
 
-  // #12 モック配信がJSTの日付で引ける
-  it("indexes the available streams by JST date", () => {
-    expect(streamsByDate.get("2024-01-16")?.[0].videoId).toBe("v1");
-  });
-
-  // #13 その月の最新配信日（3月は 06 と 21 がある）
+  // #11 その月の最新配信日（5月は 01 と 20 がある）
   it("returns the most recent stream date of a month", () => {
-    expect(latestStreamDateInMonth("2024-03")).toBe("2024-03-21");
+    expect(latestStreamDateInMonth("2025-05", dateKeys)).toBe("2025-05-20");
   });
 
-  // #14 配信のない月は null
+  // #12 配信のない月は null
   it("returns null for a month without streams", () => {
-    expect(latestStreamDateInMonth("2024-04")).toBeNull();
+    expect(latestStreamDateInMonth("2025-06", dateKeys)).toBeNull();
   });
 });

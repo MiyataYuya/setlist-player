@@ -5,10 +5,10 @@ import HomePage from "../../pages/HomePage";
 import { usePlayerStore } from "../../stores/playerStore";
 import { useHistoryStore } from "../../stores/historyStore";
 import { usePlaylistStore } from "../../stores/playlistStore";
-import { streams, songPerformances } from "../../data/songs";
+import { testCatalog } from "../../test/catalogFixture";
 
 // モックの最新配信は v5（2024-03-20T19:00:00Z → JST 2024/3/21、曲は "Lemon" 1曲）
-const latestStream = streams[0];
+const latestStream = testCatalog.streams[0];
 
 function section(name: string) {
   return within(screen.getByRole("region", { name }));
@@ -85,7 +85,7 @@ describe("HomePage のグリッドセクション", () => {
   // #7b 最近再生も6件まで、超過分は「すべて表示」へ
   it("caps recently played at six and offers a see-all link", () => {
     useHistoryStore.setState({
-      history: songPerformances.slice(0, 7).map((sp, i) => ({
+      history: testCatalog.songPerformances.slice(0, 7).map((sp, i) => ({
         performanceId: sp.performanceId,
         playedAt: `2024-03-0${i + 1}T00:00:00Z`,
       })),

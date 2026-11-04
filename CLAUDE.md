@@ -84,16 +84,16 @@ uv run build_from_sheet.py                           # data/app_*.csv と公開�
 
 ### データパイプライン
 
-CSVファイル → Viteカスタムプラグイン（ビルド時パース） → 仮想モジュール → アプリ
+CSVファイル → Viteプラグイン（dev配信 / build時に `dist/data/` へ出力） → 起動時に取得 → `catalogStore` → アプリ
 
-- `vite.config.ts` の `csvDataPlugin` が `app_songs_enriched.csv`, `app_performances.csv`, `app_videos.csv` をビルド時に読み込み、`virtual:songs`, `virtual:performances`, `virtual:videos` として提供
-- `src/data/songs.ts` が仮想モジュールからデータを結合し、`songPerformances[]`, `streams[]`, lookup mapをエクスポート
-- テスト時は `src/test/__mocks__/` のモックデータが仮想モジュールを置き換え（`vitest.config.ts` のalias設定）
+- `vite.config.ts` の `catalogCsvPlugin` が `app_songs_enriched.csv`, `app_performances.csv`, `app_videos.csv` を `${base}data/` で配る（dev はリポジトリの `data/` を直接返す）
+- 起動時に `CatalogGate` が `catalogStore.load()` → `src/data/loadCatalog.ts`（取得）→ `parseCatalog.ts`（パース）→ `buildCatalog.ts`（結合・集計）。画面は `useCatalog()` で同期的に読む（`CatalogGate` 配下専用）
+- テストは `src/test/setup.ts` が全テストの前に `catalogStore` を `src/test/catalogFixture.ts` の `testCatalog` で ready にする
 - `song_id` は台帳方式の安定採番: 既存IDは `app_songs.csv` を台帳に固定、新曲のみ `max+1` を末尾採番（欠番許容）。配信追加時の `data/` 差分は**純追加（deletions=0）が正常**で、既存IDシフトが出たら回帰
 
 ### 状態管理 (Zustand v5)
 
-6つのストアがあり、player以外はLocalStorageに永続化:
+7つのストアがあり、player・catalog以外はLocalStorageに永続化:
 
 | Store | キー | 役割 |
 |-------|------|------|
@@ -103,6 +103,7 @@ CSVファイル → Viteカスタムプラグイン（ビルド時パース） �
 | `historyStore` | `karaoke-history` | 再生履歴 (上限200件) |
 | `tagStore` | `karaoke-tags` | ユーザータグ |
 | `layoutStore` | `karaoke-layout` | プレイヤーペイン幅、曲の表示モード（リスト/タイル/グリッド） |
+| `catalogStore` | (非永続) | 起動時に取得した曲データ（idle/loading/ready/error） |
 
 `playerStore` にはモジュールレベルの `_playerRef` でYouTubeプレイヤーインスタンスを保持。
 
@@ -121,6 +122,10 @@ CSVファイル → Viteカスタムプラグイン（ビルド時パース） �
 ### UIスタイリング
 
 MUI v7 ダークテーマ。テーマ定義は `src/theme.ts`。日本語フォントスタック使用。
+
+### PWA
+
+`vite-plugin-pwa`（generateSW, `registerType: "prompt"`）。アプリ本体を precache し、`data/*.csv` のみ NetworkFirst（5秒でキャッシュへフォールバック、キャッシュ名 `catalog-csv`）。**YouTube 由来（埋め込み・サムネイル・IFrame API）はキャッシュしない**（配信者の権利保護）。新版は `UpdatePrompt` の「更新」で適用し自動リロードしない。起動時に `requestPersistentStorage()` で永続化を要求。dev では SW は無効。
 
 ## Testing Patterns
 

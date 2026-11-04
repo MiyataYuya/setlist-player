@@ -6,7 +6,13 @@ import { useHistoryStore } from "./historyStore";
 /* ---- module-scope player ref (mutable, outside zustand) ---- */
 let _playerRef: YouTubePlayer | null = null;
 
+/**
+ * 操作できるプレイヤーを返す。破棄済み（destroy 後は getIframe() が null）なら null。
+ * react-youtube は StrictMode の再マウントで、破棄予定のプレイヤーでも onReady を発火してから
+ * destroy するため、参照が破棄済みのインスタンスを指していることがある。
+ */
 export function getPlayerRef(): YouTubePlayer | null {
+  if (_playerRef && !_playerRef.getIframe()) return null;
   return _playerRef;
 }
 

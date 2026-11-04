@@ -1,5 +1,5 @@
 import { useRef, useCallback, useEffect, useMemo } from "react";
-import YouTube, { type YouTubeEvent } from "react-youtube";
+import YouTube, { type YouTubeEvent, type YouTubePlayer } from "react-youtube";
 import Box from "@mui/material/Box";
 import {
   usePlayerStore,
@@ -8,6 +8,29 @@ import {
   setPlayerRef,
 } from "../../stores/playerStore";
 import { useAutoAdvance } from "../../hooks/useAutoAdvance";
+import type { SongPerformance } from "../../data/types";
+
+/** 曲の位置へ移る。同じ動画なら seek、別の動画なら読み込む */
+function moveToSong(player: YouTubePlayer, song: SongPerformance): void {
+  try {
+    const currentVideoUrl = player.getVideoUrl?.() ?? "";
+    const isSameVideo = currentVideoUrl.includes(song.videoId);
+    if (isSameVideo) {
+      player.seekTo(song.startSeconds, true);
+      player.playVideo();
+    } else {
+      player.loadVideoById({
+        videoId: song.videoId,
+        startSeconds: song.startSeconds,
+      });
+    }
+  } catch {
+    player.loadVideoById({
+      videoId: song.videoId,
+      startSeconds: song.startSeconds,
+    });
+  }
+}
 
 export default function YouTubeEmbed() {
   const currentSong = useCurrentSong();
@@ -20,6 +43,7 @@ export default function YouTubeEmbed() {
   // 曲の遷移はすべて useEffect 経由で player API を直接呼ぶ。
   const initialVideoIdRef = useRef(currentSong?.videoId ?? "");
   const initialStartRef = useRef(currentSong?.startSeconds ?? 0);
+  const initialPerfIdRef = useRef(currentSong?.performanceId ?? null);
   const prevPerfIdRef = useRef<string | null>(
     currentSong?.performanceId ?? null,
   );
@@ -39,24 +63,7 @@ export default function YouTubeEmbed() {
     if (prevPerfIdRef.current !== currentSong.performanceId) {
       prevPerfIdRef.current = currentSong.performanceId;
       transitioningRef.current = true;
-      try {
-        const currentVideoUrl = player.getVideoUrl?.() ?? "";
-        const isSameVideo = currentVideoUrl.includes(currentSong.videoId);
-        if (isSameVideo) {
-          player.seekTo(currentSong.startSeconds, true);
-          player.playVideo();
-        } else {
-          player.loadVideoById({
-            videoId: currentSong.videoId,
-            startSeconds: currentSong.startSeconds,
-          });
-        }
-      } catch {
-        player.loadVideoById({
-          videoId: currentSong.videoId,
-          startSeconds: currentSong.startSeconds,
-        });
-      }
+      moveToSong(player, currentSong);
     }
   }, [currentSong]);
 
@@ -75,6 +82,16 @@ export default function YouTubeEmbed() {
 
   const onReady = useCallback((e: YouTubeEvent) => {
     setPlayerRef(e.target);
+    // 新しいプレイヤーは生成時の曲で始まる。準備完了までに曲が変わっていたら
+    // （プレイヤーが無い間の曲遷移は上の effect が見送る）今の曲へ移す
+    const { queue, currentIndex } = usePlayerStore.getState();
+    const song = currentIndex >= 0 ? queue[currentIndex] : undefined;
+    if (!song) return;
+    prevPerfIdRef.current = song.performanceId;
+    if (song.performanceId !== initialPerfIdRef.current) {
+      transitioningRef.current = true;
+      moveToSong(e.target, song);
+    }
   }, []);
 
   const onStateChange = useCallback(

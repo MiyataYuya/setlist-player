@@ -1,6 +1,11 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { renderHook, act } from "@testing-library/react";
-import { usePlayerStore, useCurrentSong } from "../playerStore";
+import {
+  usePlayerStore,
+  useCurrentSong,
+  getPlayerRef,
+  setPlayerRef,
+} from "../playerStore";
 import type { SongPerformance } from "../../data/types";
 
 function makeSong(id: string): SongPerformance {
@@ -201,5 +206,23 @@ describe("playerStore", () => {
     usePlayerStore.setState({ isPlayerOpen: false });
     act(() => usePlayerStore.getState().playSong(songA, queue));
     expect(usePlayerStore.getState().isPlayerOpen).toBe(true);
+  });
+});
+
+describe("getPlayerRef", () => {
+  afterEach(() => setPlayerRef(null));
+
+  // 生きているプレイヤー（iframe を持つ）はそのまま返す
+  it("returns the player while it still has its iframe", () => {
+    const player = { getIframe: () => document.createElement("iframe") };
+    setPlayerRef(player);
+    expect(getPlayerRef()).toBe(player);
+  });
+
+  // 破棄済みのプレイヤー（destroy 後は getIframe が null）は返さない
+  it("returns null once the player has been destroyed", () => {
+    const player = { getIframe: () => null };
+    setPlayerRef(player);
+    expect(getPlayerRef()).toBeNull();
   });
 });

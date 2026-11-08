@@ -1,6 +1,35 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <rect width="512" height="512" fill="#121212"/>
-  <g fill="#90caf9">
-    <path d="M336 96v226a64 64 0 1 1-32-55.4V160l-112 28v166a64 64 0 1 1-32-55.4V164z"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <!--
+    purpose:any 用のソース。角丸はアイコン自身が持つ（四隅は透明）。
+    Android のアダプティブアイコンと iOS 向けは全面塗りが必要なため public/icon-maskable.svg を使う。
+    マーク（セトリのバー3本＋再生トライアングル）の座標は両ファイルで共通。
+  -->
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="512" y2="512" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#1b2430"/>
+      <stop offset="1" stop-color="#101010"/>
+    </linearGradient>
+    <!-- バーは primary、再生マークは secondary。1本のグラデーションを共有すると
+         両者の境目が中間色でくすむため、別々のグラデーションにして発色を保つ -->
+    <linearGradient id="bars" x1="104" y1="158" x2="360" y2="326" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#a5d8ff"/>
+      <stop offset="1" stop-color="#7cb9f0"/>
+    </linearGradient>
+    <linearGradient id="play" x1="294" y1="262" x2="408" y2="354" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#f8a7c4"/>
+      <stop offset="1" stop-color="#e8739f"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
+
+  <!-- セトリの曲目。3本目を短くして再生トライアングルの居場所をつくる -->
+  <g fill="url(#bars)">
+    <rect x="104" y="158" width="256" height="36" rx="18"/>
+    <rect x="104" y="224" width="256" height="36" rx="18"/>
+    <rect x="104" y="290" width="152" height="36" rx="18"/>
   </g>
+  <!-- 角を丸めるため、一回り小さい三角形を同色で太くストロークする -->
+  <path d="M302 276 L392 308 L302 340 Z"
+        fill="url(#play)" stroke="url(#play)" stroke-width="16" stroke-linejoin="round"/>
 </svg>

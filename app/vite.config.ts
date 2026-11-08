@@ -77,7 +77,8 @@ export default defineConfig({
       workbox: {
         // アプリ本体のみ precache。CSV は含めない（precache はリビジョン固定で下の NetworkFirst より優先されるため）
         globPatterns: ["**/*.{js,css,html,svg,png,ico}"],
-        globIgnores: ["404.html"],
+        // icon-maskable.svg はアイコン生成のソースで、実行時には参照されない
+        globIgnores: ["404.html", "icon-maskable.svg"],
         navigateFallback: "index.html",
         navigateFallbackDenylist: [/\/data\//],
         // 配信者の権利保護: ランタイムキャッシュは同一オリジンの曲データCSVだけ。

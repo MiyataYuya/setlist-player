@@ -7,8 +7,10 @@ test.describe("画面遷移と再生維持", () => {
     await page.goto("/");
     await expect(page.getByRole("heading", { name: "ホーム" })).toBeVisible();
 
-    // 1. ホーム画面で曲をクリック → 再生画面が開くので閉じて MiniPlayer を出す
-    await songCards(page).first().click();
+    // 1. ホームの最新の配信から曲をクリック → 再生画面が開くので閉じて MiniPlayer を出す
+    await songCards(page, page.getByRole("region", { name: "最新の配信" }))
+      .first()
+      .click();
     const miniPlayer = await closePlayerOverlay(page);
 
     // 曲名を記録

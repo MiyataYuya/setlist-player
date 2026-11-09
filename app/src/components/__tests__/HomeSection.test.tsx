@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import { renderWithProviders, screen, userEvent } from "../../test/helpers";
 import LocationDisplay from "../../test/LocationDisplay";
 import HomeSection from "../home/HomeSection";
+import { useLayoutStore } from "../../stores/layoutStore";
 
 describe("HomeSection", () => {
   // #1 見出しと中身
@@ -88,5 +89,20 @@ describe("HomeSection", () => {
     );
     await user.click(screen.getByRole("link", { name: /すべて表示/ }));
     expect(screen.getByTestId("pathname")).toHaveTextContent("/library");
+  });
+
+  // #8 並べ方は表示方法の設定に依存しない（ホームは切替の対象外）
+  it("uses a fixed grid regardless of the song view mode", () => {
+    useLayoutStore.setState({ songViewMode: "grid" });
+    renderWithProviders(
+      <HomeSection title="最新の配信" itemCount={1}>
+        <div>タイル</div>
+      </HomeSection>
+    );
+    const grid = screen.getByText("タイル").parentElement!;
+    expect(getComputedStyle(grid).gridTemplateColumns).toBe(
+      "repeat(auto-fill, minmax(220px, 1fr))"
+    );
+    useLayoutStore.setState({ songViewMode: null });
   });
 });

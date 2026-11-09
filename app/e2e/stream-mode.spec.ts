@@ -1,11 +1,10 @@
 import { test, expect } from "@playwright/test";
-import { closePlayerOverlay } from "./helpers";
+import { closePlayerOverlay, openSearchPage } from "./helpers";
 
 // 5.2 配信モードの閲覧と再生
 test.describe("配信モードの閲覧と再生", () => {
   test("配信チップで切り替え、配信カード操作", async ({ page }) => {
-    await page.goto("/");
-    await expect(page.getByRole("heading", { name: "ホーム" })).toBeVisible();
+    await openSearchPage(page);
 
     // 1. 「配信」チップをクリック
     const streamChip = page.getByRole("button", { name: "配信", exact: true }).first();
@@ -18,7 +17,7 @@ test.describe("配信モードの閲覧と再生", () => {
     await expect(page.getByText(/\d+ 曲/).first()).toBeVisible();
 
     // 4. 配信カードをクリック → 曲一覧が展開
-    // ホーム上部のセクションにも曲カードがあるため、配信一覧の中に限定する
+    // 配信一覧の中に限定する
     const streamCard = page
       .getByTestId("stream-list")
       .getByRole("button")
@@ -45,8 +44,7 @@ test.describe("配信モードの閲覧と再生", () => {
   });
 
   test("▶ボタンで配信再生", async ({ page }) => {
-    await page.goto("/");
-    await expect(page.getByRole("heading", { name: "ホーム" })).toBeVisible();
+    await openSearchPage(page);
 
     // 配信モードに切替
     const streamChip = page.locator("span", { hasText: /^配信$/ }).first();

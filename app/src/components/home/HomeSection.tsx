@@ -5,7 +5,12 @@ import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import { Link as RouterLink } from "react-router-dom";
 import type { ReactNode } from "react";
 import { songGridSx } from "../songs/cardGrid";
-import { useSongViewMode } from "../../hooks/useSongViewMode";
+
+/**
+ * ホームのセクションは表示方法の設定に従わず、常にタイル幅の多列で並べる。
+ * 狭い画面では1列に畳まれるのでモバイルではリストと同じ見た目になる。
+ */
+const SECTION_GRID_SX = songGridSx("tile");
 
 interface Props {
   title: string;
@@ -27,8 +32,6 @@ export default function HomeSection({
   seeAllPath,
   children,
 }: Props) {
-  const mode = useSongViewMode();
-
   if (itemCount === 0) return null;
 
   const hasMore = shownCount != null && itemCount > shownCount;
@@ -67,7 +70,7 @@ export default function HomeSection({
           </Link>
         )}
       </Box>
-      <Box sx={songGridSx(mode)}>
+      <Box sx={SECTION_GRID_SX}>
         {children}
       </Box>
     </Box>

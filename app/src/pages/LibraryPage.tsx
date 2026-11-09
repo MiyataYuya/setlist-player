@@ -15,6 +15,8 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import SongList from "../components/songs/SongList";
+import ViewModeToggle from "../components/songs/ViewModeToggle";
+import PageHeader from "../components/common/PageHeader";
 import PlaylistTile from "../components/home/PlaylistTile";
 import { useLibraryStore } from "../stores/libraryStore";
 import { useHistoryStore } from "../stores/historyStore";
@@ -60,9 +62,7 @@ export default function LibraryPage() {
   return (
     <Box sx={{ pb: 2 }}>
       <Box sx={{ p: 2 }}>
-        <Typography variant="h5" gutterBottom>
-          ライブラリ
-        </Typography>
+        <PageHeader title="ライブラリ" action={<ViewModeToggle />} />
       </Box>
 
       {/* プレイリスト */}

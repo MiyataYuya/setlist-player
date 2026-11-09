@@ -1,10 +1,10 @@
 import { test, expect } from "@playwright/test";
+import { openSearchPage } from "./helpers";
 
 // 5.3 無限スクロール
 test.describe("無限スクロール", () => {
   test("スクロールで追加の曲が読み込まれる", async ({ page }) => {
-    await page.goto("/");
-    await expect(page.getByRole("heading", { name: "ホーム" })).toBeVisible();
+    await openSearchPage(page);
 
     // 1. 曲一覧を表示（初期状態で曲が50件以上あるか確認）
     const totalCountText = await page

@@ -58,4 +58,10 @@ describe("LibraryPage のプレイリスト", () => {
     await user.click(screen.getByRole("button", { name: /作業BGM/ }));
     expect(screen.getByTestId("pathname")).toHaveTextContent("/playlist/pl-1");
   });
+
+  // 表示方法の切替は一覧のある各ページの上部に置く
+  it("shows the view mode toggle in the header", () => {
+    renderWithProviders(<LibraryPage />);
+    expect(screen.getByRole("group", { name: "表示方法" })).toBeInTheDocument();
+  });
 });

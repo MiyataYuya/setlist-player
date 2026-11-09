@@ -1,10 +1,12 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { within } from "@testing-library/react";
-import { renderWithProviders, screen } from "../../test/helpers";
+import { renderWithProviders, screen, userEvent } from "../../test/helpers";
+import LocationDisplay from "../../test/LocationDisplay";
 import HomePage from "../../pages/HomePage";
 import { usePlayerStore } from "../../stores/playerStore";
 import { useHistoryStore } from "../../stores/historyStore";
 import { usePlaylistStore } from "../../stores/playlistStore";
+import { useLayoutStore } from "../../stores/layoutStore";
 import { testCatalog } from "../../test/catalogFixture";
 
 // モックの最新配信は v5（2024-03-20T19:00:00Z → JST 2024/3/21、曲は "Lemon" 1曲）
@@ -19,6 +21,7 @@ describe("HomePage のグリッドセクション", () => {
     usePlayerStore.setState({ queue: [], currentIndex: -1, isPlaying: false });
     useHistoryStore.setState({ history: [] });
     usePlaylistStore.setState({ playlists: [] });
+    useLayoutStore.setState({ songViewMode: null });
   });
 
   // #1 最新の配信は常に出る（データがある限り）
@@ -116,9 +119,37 @@ describe("HomePage のグリッドセクション", () => {
     ).toBeInTheDocument();
   });
 
-  // #9 既存の一覧は従来どおり下に残る
-  it("still renders the full song list below the sections", () => {
+  // #9 全曲一覧は検索へ移した。ホームは入口のセクションだけ
+  it("does not render the full song list", () => {
     renderWithProviders(<HomePage />);
-    expect(screen.getByRole("button", { name: /シャッフル再生/ })).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /シャッフル再生/ })
+    ).not.toBeInTheDocument();
+    expect(screen.queryByTestId("song-list")).not.toBeInTheDocument();
+  });
+
+  // #10 全曲一覧（検索）への導線を残す
+  it("links to the full song list on the search page", async () => {
+    const user = userEvent.setup();
+    renderWithProviders(
+      <>
+        <HomePage />
+        <LocationDisplay />
+      </>
+    );
+    await user.click(screen.getByRole("link", { name: /すべての曲を見る/ }));
+    expect(screen.getByTestId("pathname")).toHaveTextContent("/search");
+  });
+
+  // #11 ホームのセクションは表示方法の設定に左右されない（切替は一覧画面のもの）
+  it("keeps its sections' layout regardless of the song view mode", () => {
+    useLayoutStore.setState({ songViewMode: "grid" });
+    const { container } = renderWithProviders(<HomePage />);
+    // サムネは装飾扱い（alt=""）でロールを持たないので DOM から取る
+    const img = screen
+      .getByRole("region", { name: "最新の配信" })
+      .querySelector("img")!;
+    expect(getComputedStyle(img).width).not.toBe("100%");
+    expect(container.querySelector('[aria-label="表示方法"]')).toBeNull();
   });
 });

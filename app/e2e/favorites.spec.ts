@@ -1,10 +1,10 @@
 import { test, expect } from "@playwright/test";
+import { openSearchPage } from "./helpers";
 
 // 5.5 お気に入り操作
 test.describe("お気に入り操作", () => {
   test("お気に入り追加・ライブラリ確認・解除", async ({ page }) => {
-    await page.goto("/");
-    await expect(page.getByRole("heading", { name: "ホーム" })).toBeVisible();
+    await openSearchPage(page);
 
     // 1. 曲カードの ⋮ メニューからお気に入りに追加する
     const songList = page.getByTestId("song-list");

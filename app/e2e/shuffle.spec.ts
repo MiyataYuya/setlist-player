@@ -1,11 +1,10 @@
 import { test, expect } from "@playwright/test";
-import { closePlayerOverlay } from "./helpers";
+import { closePlayerOverlay, openSearchPage } from "./helpers";
 
 // 5.6 シャッフル再生
 test.describe("シャッフル再生", () => {
   test("シャッフル再生ボタンで再生開始、次へで別の曲", async ({ page }) => {
-    await page.goto("/");
-    await expect(page.getByRole("heading", { name: "ホーム" })).toBeVisible();
+    await openSearchPage(page);
 
     // 1. 「シャッフル再生」ボタンをクリック → 再生画面が開く
     await page.getByRole("button", { name: "シャッフル再生" }).click();

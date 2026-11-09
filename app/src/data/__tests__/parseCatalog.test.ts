@@ -23,7 +23,7 @@ describe("parseSongsCsv", () => {
 });
 
 describe("parsePerformancesCsv", () => {
-  // #4 秒数を数値化
+  // #4 秒数を数値化（style 列の無い旧CSVでも読める＝style は null）
   it("converts seconds to numbers", () => {
     const csv =
       "performance_id,song_id,video_id,start_seconds,end_seconds,published_at\n" +
@@ -36,7 +36,25 @@ describe("parsePerformancesCsv", () => {
         startSeconds: 12,
         endSeconds: 345,
         publishedAt: "2024-01-15T19:00:00Z",
+        style: null,
       },
+    ]);
+  });
+
+  // #4b 演奏スタイル列（列追加なので任意列として扱う）
+  it("reads the performance style column", () => {
+    const csv = [
+      "performance_id,song_id,video_id,start_seconds,end_seconds,published_at,style",
+      "perf_0001,song_0001,abc,0,300,2024-01-15T19:00:00Z,guitar",
+      "perf_0002,song_0002,abc,300,600,2024-01-15T19:00:00Z,karaoke",
+      "perf_0003,song_0003,abc,600,900,2024-01-15T19:00:00Z,",
+      "perf_0004,song_0004,abc,900,1200,2024-01-15T19:00:00Z,unknown",
+    ].join("\n");
+    expect(parsePerformancesCsv(csv).map((p) => p.style)).toEqual([
+      "guitar",
+      "karaoke",
+      null,
+      null,
     ]);
   });
 

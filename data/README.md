@@ -62,6 +62,7 @@ song_performances.csv  (公開用)
 | `start_seconds` | 曲開始位置（秒） |
 | `end_seconds` | 曲終了位置（秒、同一動画内の次曲開始秒で自動補完） |
 | `published_at` | 配信公開日時（ISO 8601） |
+| `style` | 演奏スタイル。シートF列の 🎸→`guitar`（弾き語り）/ 🎤→`karaoke`（歌枠）。それ以外の記号（🔒等）は空 |
 
 #### `app_videos.csv` — 動画情報
 

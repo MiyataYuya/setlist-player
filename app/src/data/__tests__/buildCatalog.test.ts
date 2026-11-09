@@ -82,4 +82,30 @@ describe("buildCatalog", () => {
     expect(empty.calendarMonths).toEqual([]);
     expect(empty.streams).toEqual([]);
   });
+
+  // 演奏スタイルを曲に引き継ぐ
+  it("carries the performance style onto song performances", () => {
+    expect(catalog.songPerformanceById.get("p1")?.style).toBe("guitar");
+    expect(catalog.songPerformanceById.get("p3")?.style).toBe("karaoke");
+  });
+
+  // 配信は含まれるスタイルを重複なく、弾き語り→歌枠の順で持つ
+  it("lists the styles each stream contains", () => {
+    const styles = (videoId: string) =>
+      catalog.streams.find((s) => s.videoId === videoId)?.styles;
+    expect(styles("v1")).toEqual(["guitar"]);
+    expect(styles("v2")).toEqual(["karaoke"]);
+    // v3 は弾き語り・歌枠の混在
+    expect(styles("v3")).toEqual(["guitar", "karaoke"]);
+  });
+
+  // スタイル不明の演奏は配信のスタイルに数えない
+  it("ignores performances without a style when listing stream styles", () => {
+    const c = buildCatalog({
+      songs: fixtureSongs,
+      performances: [{ ...fixturePerformances[0], style: null }],
+      videos: fixtureVideos,
+    });
+    expect(c.streams[0].styles).toEqual([]);
+  });
 });

@@ -16,6 +16,7 @@ function makeSongs(count: number): SongPerformance[] {
     endSeconds: 300,
     publishedAt: "2024-01-01T00:00:00Z",
     thumbnailUrl: `https://img.youtube.com/vi/v${i}/mqdefault.jpg`,
+    style: null,
   }));
 }
 

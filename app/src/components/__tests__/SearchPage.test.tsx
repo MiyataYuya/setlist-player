@@ -82,4 +82,56 @@ describe("SearchPage", () => {
     renderWithProviders(<SearchPage />);
     expect(screen.getByText("曲が見つかりません")).toBeInTheDocument();
   });
+
+  // --- 演奏スタイルの絞り込み ---
+  const guitarSongs = testCatalog.songPerformances.filter((s) => s.style === "guitar");
+  const karaokeSongs = testCatalog.songPerformances.filter((s) => s.style === "karaoke");
+
+  it("全曲一覧を弾き語りだけに絞り込める", async () => {
+    const user = userEvent.setup();
+    renderWithProviders(<SearchPage />);
+    await user.click(screen.getByRole("button", { name: "弾き語り" }));
+    expect(screen.getByText(`${guitarSongs.length} 曲`)).toBeInTheDocument();
+    expect(screen.queryByRole("img", { name: "歌枠" })).not.toBeInTheDocument();
+  });
+
+  it("「すべて」で絞り込みを解除できる", async () => {
+    const user = userEvent.setup();
+    renderWithProviders(<SearchPage />);
+    await user.click(screen.getByRole("button", { name: "歌枠" }));
+    expect(screen.getByText(`${karaokeSongs.length} 曲`)).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "すべて" }));
+    expect(
+      screen.getByText(`${testCatalog.songPerformances.length} 曲`)
+    ).toBeInTheDocument();
+  });
+
+  it("配信一覧はそのスタイルの曲を含む配信だけに絞る", async () => {
+    const user = userEvent.setup();
+    renderWithProviders(<SearchPage />);
+    await user.click(screen.getByRole("button", { name: "配信" }));
+    await user.click(screen.getByRole("button", { name: "歌枠" }));
+    const expected = testCatalog.streams.filter((s) => s.styles.includes("karaoke"));
+    expect(screen.getByText(`${expected.length} 配信`)).toBeInTheDocument();
+  });
+
+  it("シャッフル再生は絞り込んだスタイルの曲だけを対象にする", async () => {
+    const user = userEvent.setup();
+    renderWithProviders(<SearchPage />);
+    await user.click(screen.getByRole("button", { name: "歌枠" }));
+    await user.click(screen.getByRole("button", { name: /シャッフル再生/ }));
+    const { queue } = usePlayerStore.getState();
+    expect(queue).toHaveLength(karaokeSongs.length);
+    expect(queue.every((s) => s.style === "karaoke")).toBe(true);
+  });
+
+  it("検索結果も演奏スタイルで絞り込める", async () => {
+    const user = userEvent.setup();
+    // 天体観測は p1（弾き語り）と p4（歌枠）の2演奏
+    useLibraryStore.setState({ searchQuery: "天体観測" });
+    renderWithProviders(<SearchPage />);
+    expect(screen.getByText("2 件")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "弾き語り" }));
+    expect(screen.getByText("1 件")).toBeInTheDocument();
+  });
 });

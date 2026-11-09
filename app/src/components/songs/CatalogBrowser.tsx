@@ -13,6 +13,12 @@ import SortMenu from "./SortMenu";
 import StreamList from "./StreamList";
 import TagFilter from "./TagFilter";
 import type { SortOption } from "./SortMenu";
+import type { PerformanceStyle } from "../../data/types";
+
+interface Props {
+  /** 演奏スタイルの絞り込み（null は絞り込みなし）。曲・配信・シャッフルすべてに効く */
+  style: PerformanceStyle | null;
+}
 
 type BrowseMode = "stream" | "song";
 
@@ -20,7 +26,7 @@ type BrowseMode = "stream" | "song";
  * 全曲・全配信の一覧。曲/配信の切替、並び替え、タグ絞り込み、全曲シャッフルを持つ。
  * 表示方法（リスト/タイル/グリッド）の切替はページ上部に置くのでここには含めない。
  */
-export default function CatalogBrowser() {
+export default function CatalogBrowser({ style }: Props) {
   const { songPerformances, streams } = useCatalog();
   const playSong = usePlayerStore((s) => s.playSong);
   const shuffleQueue = usePlayerStore((s) => s.shuffleQueue);
@@ -28,8 +34,24 @@ export default function CatalogBrowser() {
   const [sortOption, setSortOption] = useState<SortOption>("date-desc");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
 
+  const styledSongs = useMemo(
+    () =>
+      style === null
+        ? songPerformances
+        : songPerformances.filter((song) => song.style === style),
+    [songPerformances, style]
+  );
+
+  const styledStreams = useMemo(
+    () =>
+      style === null
+        ? streams
+        : streams.filter((stream) => stream.styles.includes(style)),
+    [streams, style]
+  );
+
   const sortedSongs = useMemo(() => {
-    let songs = [...songPerformances];
+    let songs = [...styledSongs];
 
     if (selectedTags.length > 0) {
       const songTags = useTagStore.getState().songTags;
@@ -61,7 +83,7 @@ export default function CatalogBrowser() {
           return b.artist.localeCompare(a.artist, "ja");
       }
     });
-  }, [songPerformances, sortOption, selectedTags]);
+  }, [styledSongs, sortOption, selectedTags]);
 
   function handleToggleTag(tag: string): void {
     setSelectedTags((prev) =>
@@ -69,9 +91,11 @@ export default function CatalogBrowser() {
     );
   }
 
+  // 絞り込んだスタイルの曲だけでシャッフルする（「弾き語りだけ流す」ができるように）
   const handleShuffleAll = () => {
-    const random = Math.floor(Math.random() * songPerformances.length);
-    playSong(songPerformances[random], songPerformances);
+    if (styledSongs.length === 0) return;
+    const random = Math.floor(Math.random() * styledSongs.length);
+    playSong(styledSongs[random], styledSongs);
     shuffleQueue();
   };
 
@@ -81,8 +105,8 @@ export default function CatalogBrowser() {
       <Box sx={{ px: 2, pb: 2, maxWidth: 560 }}>
         <Typography variant="body2" color="text.secondary" gutterBottom>
           {browseMode === "song"
-            ? `${songPerformances.length} 曲`
-            : `${streams.length} 配信`}
+            ? `${styledSongs.length} 曲`
+            : `${styledStreams.length} 配信`}
         </Typography>
         <Box
           sx={{
@@ -128,7 +152,7 @@ export default function CatalogBrowser() {
       {browseMode === "song" ? (
         <SongList songs={sortedSongs} />
       ) : (
-        <StreamList streams={streams} />
+        <StreamList streams={styledStreams} />
       )}
     </>
   );

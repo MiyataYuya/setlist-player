@@ -12,6 +12,7 @@ import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import type { Stream } from "../../data/types";
 import { formatJstDate } from "../../data/jstDate";
 import { cleanStreamTitle } from "../../data/streamTitle";
+import { formatStyles } from "../../data/performanceStyle";
 import { usePlayerStore } from "../../stores/playerStore";
 import SongList from "./SongList";
 
@@ -52,7 +53,9 @@ export default function StreamCard({ stream }: Props) {
           </ListItemAvatar>
           <ListItemText
             primary={displayTitle}
-            secondary={`${date} ・ ${stream.songCount} 曲`}
+            secondary={[date, `${stream.songCount} 曲`, formatStyles(stream.styles)]
+              .filter(Boolean)
+              .join(" ・ ")}
             primaryTypographyProps={{ noWrap: true }}
             secondaryTypographyProps={{ noWrap: true }}
           />

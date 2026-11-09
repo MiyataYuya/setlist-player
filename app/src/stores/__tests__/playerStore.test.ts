@@ -19,6 +19,7 @@ function makeSong(id: string): SongPerformance {
     endSeconds: 300,
     publishedAt: "2024-01-01T00:00:00Z",
     thumbnailUrl: `https://img.youtube.com/vi/video-${id}/mqdefault.jpg`,
+    style: null,
   };
 }
 

@@ -5,6 +5,12 @@ export interface Song {
   performanceNote: string;
 }
 
+/** 演奏スタイル。guitar=弾き語り / karaoke=歌枠（シートの 🎸/🎤） */
+export type PerformanceStyle = "guitar" | "karaoke";
+
+/** 表示・絞り込みで並べる固定順 */
+export const PERFORMANCE_STYLES: readonly PerformanceStyle[] = ["guitar", "karaoke"];
+
 export interface Performance {
   performanceId: string;
   songId: string;
@@ -12,6 +18,8 @@ export interface Performance {
   startSeconds: number;
   endSeconds: number;
   publishedAt: string;
+  /** 分類なし（旧CSV・対応外の記号）は null */
+  style: PerformanceStyle | null;
 }
 
 export interface Video {
@@ -34,6 +42,8 @@ export interface Stream {
   duration: string;
   viewCount: number;
   likeCount: number;
+  /** 含まれる演奏スタイル（重複なし、PERFORMANCE_STYLES の順） */
+  styles: PerformanceStyle[];
   songs: SongPerformance[];
 }
 
@@ -48,6 +58,7 @@ export interface SongPerformance {
   endSeconds: number;
   publishedAt: string;
   thumbnailUrl: string;
+  style: PerformanceStyle | null;
 }
 
 /** 起動時に取得したCSVから組み立てる、アプリ全体の曲データ */

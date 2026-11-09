@@ -66,6 +66,18 @@ def _seconds_to_hms(sec: int) -> str:
     return f"{h:02d}:{m:02d}:{s:02d}"
 
 
+# F列の演奏スタイル記号 → app_performances.csv の style 値。
+# 🔒（メンバー限定と思われる）など対応外の記号は分類せず空文字にする。
+STYLE_BY_MARK = {"🎸": "guitar", "🎤": "karaoke"}
+
+
+def parse_style(mark: object) -> str:
+    """F列の記号を演奏スタイル（guitar=弾き語り / karaoke=歌枠）に変換する。"""
+    if mark is None:
+        return ""
+    return STYLE_BY_MARK.get(str(mark).strip(), "")
+
+
 def extract_sheet_rows(xlsx_path: str) -> list[dict]:
     """シート全行から performance データを抽出。"""
     wb = openpyxl.load_workbook(xlsx_path, data_only=True)
@@ -93,6 +105,7 @@ def extract_sheet_rows(xlsx_path: str) -> list[dict]:
         start_seconds = int(m.group(2)) if m.group(2) else 0
 
         artist_v = ws.cell(row=row_idx, column=COL_ARTIST).value
+        mode_v = ws.cell(row=row_idx, column=COL_MODE).value
         try:
             no_int = int(no_v) if no_v is not None else 0
         except (TypeError, ValueError):
@@ -105,6 +118,7 @@ def extract_sheet_rows(xlsx_path: str) -> list[dict]:
             "artist": (str(artist_v).strip() if artist_v else ""),
             "video_id": video_id,
             "start_seconds": start_seconds,
+            "style": parse_style(mode_v),
             "video_title_text": str(url_cell.value or "").strip(),
         })
 
@@ -288,6 +302,7 @@ def build(xlsx_path: str) -> None:
             "start_seconds": r["start_seconds"],
             "end_seconds": 0,
             "published_at": published_at,
+            "style": r["style"],
         })
 
     fill_end_seconds(perfs)
@@ -313,6 +328,8 @@ def build(xlsx_path: str) -> None:
         w = csv.DictWriter(f, fieldnames=[
             "performance_id", "song_id", "video_id",
             "start_seconds", "end_seconds", "published_at",
+            # 列追加は旧版アプリとも互換（末尾に足す）
+            "style",
         ])
         w.writeheader()
         w.writerows(perfs)

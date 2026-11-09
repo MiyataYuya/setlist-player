@@ -10,11 +10,13 @@ const mockSongs: SongPerformance[] = [
     performanceId: "p1", songId: "s1", title: "Song1", artist: "Artist1",
     videoId: "v1", startSeconds: 0, endSeconds: 300, publishedAt: "2024-01-15T19:00:00Z",
     thumbnailUrl: "https://img.youtube.com/vi/v1/mqdefault.jpg",
+    style: "guitar",
   },
   {
     performanceId: "p2", songId: "s2", title: "Song2", artist: "Artist2",
     videoId: "v1", startSeconds: 310, endSeconds: 600, publishedAt: "2024-01-15T19:00:00Z",
     thumbnailUrl: "https://img.youtube.com/vi/v1/mqdefault.jpg",
+    style: "guitar",
   },
 ];
 
@@ -27,6 +29,7 @@ const stream: Stream = {
   duration: "PT1H",
   viewCount: 10000,
   likeCount: 500,
+  styles: ["guitar"],
   songs: mockSongs,
 };
 
@@ -108,5 +111,23 @@ describe("StreamCard", () => {
     };
     renderWithProviders(<StreamCard stream={streamWithDirtyTitle} />);
     expect(screen.getByText("歌配信")).toBeInTheDocument();
+  });
+
+  // 配信に含まれる演奏スタイルを添える
+  it("labels a guitar-only stream as 弾き語り", () => {
+    renderWithProviders(<StreamCard stream={stream} />);
+    expect(screen.getByText(/2 曲 ・ 弾き語り$/)).toBeInTheDocument();
+  });
+
+  it("labels a mixed stream with both styles", () => {
+    renderWithProviders(
+      <StreamCard stream={{ ...stream, styles: ["guitar", "karaoke"] }} />
+    );
+    expect(screen.getByText(/2 曲 ・ 弾き語り・歌枠$/)).toBeInTheDocument();
+  });
+
+  it("adds no style label when none is known", () => {
+    renderWithProviders(<StreamCard stream={{ ...stream, styles: [] }} />);
+    expect(screen.getByText(/2 曲$/)).toBeInTheDocument();
   });
 });

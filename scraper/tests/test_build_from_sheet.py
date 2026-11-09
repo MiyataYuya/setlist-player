@@ -1,4 +1,4 @@
-from build_from_sheet import _song_num, load_song_registry
+from build_from_sheet import _song_num, extract_sheet_rows, load_song_registry, parse_style
 
 
 def test_song_num_parses_zero_padded():
@@ -76,3 +76,55 @@ def test_assign_song_ids_all_broken_registry_starts_from_one():
     reg = {("A", "x"): "garbage"}
     m, _ = assign_song_ids(_rows(("A", "x"), ("New", "z")), reg)
     assert m[("New", "z")] == "song_0001"
+
+
+# --- 演奏スタイル（F列の 🎸/🎤）---
+
+def test_parse_style_guitar():
+    assert parse_style("🎸") == "guitar"
+
+
+def test_parse_style_karaoke():
+    assert parse_style("🎤") == "karaoke"
+
+
+def test_parse_style_tolerates_surrounding_spaces():
+    assert parse_style(" 🎸 ") == "guitar"
+
+
+def test_parse_style_unknown_marks_are_empty():
+    # 🔒（メンバー限定と思われる）や空欄は分類しない
+    assert parse_style("🔒") == ""
+    assert parse_style(None) == ""
+    assert parse_style("") == ""
+
+
+def _write_sheet(path, rows):
+    """extract_sheet_rows が読む形（先頭シート・DATA_START_ROW 以降）の xlsx を作る。"""
+    import openpyxl
+    from build_from_sheet import (
+        COL_ARTIST, COL_DATE, COL_MODE, COL_NO, COL_TITLE, COL_URL, DATA_START_ROW,
+    )
+
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    for i, (title, mode, url) in enumerate(rows):
+        r = DATA_START_ROW + i
+        ws.cell(row=r, column=COL_DATE, value="2026-01-01 20:00:00")
+        ws.cell(row=r, column=COL_NO, value=i + 1)
+        ws.cell(row=r, column=COL_TITLE, value=title)
+        ws.cell(row=r, column=COL_ARTIST, value="アーティスト")
+        ws.cell(row=r, column=COL_MODE, value=mode)
+        cell = ws.cell(row=r, column=COL_URL, value="配信タイトル")
+        cell.hyperlink = url
+    wb.save(path)
+
+
+def test_extract_sheet_rows_reads_style_per_row(tmp_path):
+    path = tmp_path / "sheet.xlsx"
+    _write_sheet(path, [
+        ("曲A", "🎸", "https://www.youtube.com/watch?v=AAAAAAAAAAA&t=10s"),
+        ("曲B", "🎤", "https://www.youtube.com/watch?v=AAAAAAAAAAA&t=300s"),
+    ])
+    rows = extract_sheet_rows(str(path))
+    assert [r["style"] for r in rows] == ["guitar", "karaoke"]

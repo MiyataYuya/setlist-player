@@ -14,6 +14,7 @@ import PlaylistAddIcon from "@mui/icons-material/PlaylistAdd";
 import { usePlayerStore } from "../../stores/playerStore";
 import { useLibraryStore } from "../../stores/libraryStore";
 import AddToPlaylistDialog from "../playlist/AddToPlaylistDialog";
+import { STYLE_LABEL, STYLE_MARK } from "../../data/performanceStyle";
 import { formatJstDate } from "../../data/jstDate";
 import { CARD_THUMBNAIL_WIDTH } from "./cardGrid";
 import type { CardVariant } from "./cardGrid";
@@ -37,6 +38,7 @@ function SongCard({ song, queue, variant = "horizontal" }: Props) {
   const isVertical = variant === "vertical";
   const date = formatJstDate(song.publishedAt);
   const secondary = [song.artist, date].filter(Boolean).join(" ・ ");
+  const style = song.style;
 
   function handleMenuOpen(e: React.MouseEvent<HTMLElement>): void {
     e.stopPropagation();
@@ -95,8 +97,14 @@ function SongCard({ song, queue, variant = "horizontal" }: Props) {
           <Typography variant="body2" noWrap>
             {song.title}
           </Typography>
-          {secondary && (
+          {(secondary || style) && (
             <Typography variant="caption" color="text.secondary" noWrap display="block">
+              {/* 演奏スタイルの記号は読み上げ用に名前を付ける（🎸 → 弾き語り） */}
+              {style && (
+                <span role="img" aria-label={STYLE_LABEL[style]}>
+                  {STYLE_MARK[style]}{" "}
+                </span>
+              )}
               {secondary}
             </Typography>
           )}

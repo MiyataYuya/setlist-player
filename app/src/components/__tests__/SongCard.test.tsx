@@ -15,6 +15,7 @@ const song: SongPerformance = {
   endSeconds: 300,
   publishedAt: "2024-01-15T19:00:00Z",
   thumbnailUrl: "https://img.youtube.com/vi/v1/mqdefault.jpg",
+  style: "guitar",
 };
 
 const songNoArtist: SongPerformance = {
@@ -94,5 +95,23 @@ describe("SongCard", () => {
     );
     await user.click(screen.getByText("天体観測"));
     expect(usePlayerStore.getState().isPlaying).toBe(true);
+  });
+
+  // 演奏スタイルのマーク（シートと同じ 🎸/🎤）。読み上げ用に名前を付ける
+  it("marks a guitar performance as 弾き語り", () => {
+    renderWithProviders(<SongCard song={song} queue={queue} />);
+    expect(screen.getByRole("img", { name: "弾き語り" })).toHaveTextContent("🎸");
+  });
+
+  it("marks a karaoke performance as 歌枠", () => {
+    renderWithProviders(
+      <SongCard song={{ ...song, style: "karaoke" }} queue={queue} />
+    );
+    expect(screen.getByRole("img", { name: "歌枠" })).toHaveTextContent("🎤");
+  });
+
+  it("shows no style mark when the style is unknown", () => {
+    renderWithProviders(<SongCard song={{ ...song, style: null }} queue={queue} />);
+    expect(screen.queryByRole("img", { name: /弾き語り|歌枠/ })).not.toBeInTheDocument();
   });
 });

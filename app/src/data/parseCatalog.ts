@@ -1,5 +1,6 @@
 import Papa from "papaparse";
-import type { Performance, Song, Video } from "./types";
+import { PERFORMANCE_STYLES } from "./types";
+import type { Performance, PerformanceStyle, Song, Video } from "./types";
 
 interface RawSong {
   song_id: string;
@@ -15,6 +16,8 @@ interface RawPerformance {
   start_seconds: string;
   end_seconds: string;
   published_at: string;
+  /** 後から追加した列。旧CSVには無い */
+  style?: string;
 }
 
 interface RawVideo {
@@ -52,6 +55,10 @@ export function parseSongsCsv(csv: string): Song[] {
     }));
 }
 
+function parseStyle(raw: string | undefined): PerformanceStyle | null {
+  return PERFORMANCE_STYLES.find((style) => style === raw) ?? null;
+}
+
 export function parsePerformancesCsv(csv: string): Performance[] {
   return parseRows<RawPerformance>(csv, [
     "performance_id",
@@ -69,6 +76,7 @@ export function parsePerformancesCsv(csv: string): Performance[] {
       startSeconds: Number(r.start_seconds),
       endSeconds: Number(r.end_seconds),
       publishedAt: r.published_at,
+      style: parseStyle(r.style),
     }));
 }
 

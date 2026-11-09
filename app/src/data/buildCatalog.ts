@@ -1,5 +1,6 @@
 import { groupStreamsByJstDate, monthRange } from "./calendar";
 import { toMonthKey } from "./jstDate";
+import { PERFORMANCE_STYLES } from "./types";
 import type { Catalog, Performance, Song, SongPerformance, Stream, Video } from "./types";
 
 export interface CatalogSource {
@@ -29,6 +30,7 @@ export function buildCatalog({ songs, performances, videos }: CatalogSource): Ca
       endSeconds: p.endSeconds,
       publishedAt: p.publishedAt,
       thumbnailUrl: thumbnailUrl(p.videoId),
+      style: p.style,
     };
   });
 
@@ -52,6 +54,9 @@ export function buildCatalog({ songs, performances, videos }: CatalogSource): Ca
         duration: video?.duration ?? "",
         viewCount: video?.viewCount ?? 0,
         likeCount: video?.likeCount ?? 0,
+        styles: PERFORMANCE_STYLES.filter((style) =>
+          streamSongs.some((sp) => sp.style === style)
+        ),
         songs: streamSongs,
       };
     })

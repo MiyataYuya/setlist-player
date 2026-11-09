@@ -18,4 +18,12 @@ describe("BottomNav", () => {
     const homeBtn = screen.getByText("ホーム").closest("button");
     expect(homeBtn?.classList.toString()).toMatch(/selected|Mui-selected/);
   });
+
+  // ナビに無いページ（曲ページ・プレイリスト）ではどのタブも選択しない（PCの SideNav と揃える）
+  it("highlights no tab on pages outside the nav", () => {
+    renderWithRoute(<BottomNav />, ["/song/s1"]);
+    for (const button of screen.getAllByRole("button")) {
+      expect(button.classList.toString()).not.toMatch(/Mui-selected/);
+    }
+  });
 });

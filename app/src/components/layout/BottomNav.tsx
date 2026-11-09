@@ -9,9 +9,9 @@ export default function BottomNav() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const currentIndex = NAV_ITEMS.findIndex(
-    (item) => item.path === location.pathname
-  );
+  // ナビに無いページ（曲ページ・プレイリスト）では null にしてどのタブも選択しない
+  const currentPath =
+    NAV_ITEMS.find((item) => item.path === location.pathname)?.path ?? null;
 
   return (
     <Paper
@@ -19,18 +19,19 @@ export default function BottomNav() {
       elevation={8}
     >
       <BottomNavigation
-        value={currentIndex >= 0 ? currentIndex : 0}
-        onChange={(_, newValue) => {
+        value={currentPath}
+        onChange={(_, newPath: string) => {
           if (usePlayerStore.getState().isPlayerOpen) {
             usePlayerStore.getState().closePlayer();
           }
-          navigate(NAV_ITEMS[newValue].path);
+          navigate(newPath);
         }}
         showLabels
       >
         {NAV_ITEMS.map((item) => (
           <BottomNavigationAction
             key={item.path}
+            value={item.path}
             label={item.label}
             icon={item.icon}
           />

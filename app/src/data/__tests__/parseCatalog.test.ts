@@ -37,6 +37,8 @@ describe("parsePerformancesCsv", () => {
         endSeconds: 345,
         publishedAt: "2024-01-15T19:00:00Z",
         style: null,
+        nth: null,
+        gapDays: null,
       },
     ]);
   });
@@ -55,6 +57,21 @@ describe("parsePerformancesCsv", () => {
       "karaoke",
       null,
       null,
+    ]);
+  });
+
+  // #4c 歌唱履歴（何回目・前回からの日数）。初披露は gap_days が空
+  it("reads how many times and how long since the song was sung", () => {
+    const csv = [
+      "performance_id,song_id,video_id,start_seconds,end_seconds,published_at,style,nth,gap_days",
+      "perf_0001,song_0001,abc,0,300,2024-01-15T19:00:00Z,guitar,1,",
+      "perf_0002,song_0001,def,0,300,2024-08-15T19:00:00Z,guitar,2,213",
+    ].join("\n");
+    expect(
+      parsePerformancesCsv(csv).map((p) => [p.nth, p.gapDays])
+    ).toEqual([
+      [1, null],
+      [2, 213],
     ]);
   });
 

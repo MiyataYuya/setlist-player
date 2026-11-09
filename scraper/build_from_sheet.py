@@ -26,6 +26,7 @@ import os
 import re
 import sys
 from collections import defaultdict
+from datetime import date
 from typing import Optional
 
 import openpyxl
@@ -78,13 +79,29 @@ def parse_style(mark: object) -> str:
     return STYLE_BY_MARK.get(str(mark).strip(), "")
 
 
+def annotate_history(rows: list[dict]) -> None:
+    """各行に、その曲（曲名+アーティスト）の何回目の歌唱か（nth）と、
+    前回の歌唱からの日数（gap_days、初回は None）を付ける。
+
+    シートの日付（配信日、JST）と披露順で並べて数える。メンバー限定など
+    アプリに出さない行も含めて渡すこと（「初披露」を取り違えないため）。
+    """
+    last: dict[tuple[str, str], tuple[int, date]] = {}
+    for r in sorted(rows, key=lambda r: (r["date"], r["no"])):
+        key = (r["title"], r["artist"])
+        day = date.fromisoformat(r["date"][:10])
+        prev = last.get(key)
+        r["nth"] = prev[0] + 1 if prev else 1
+        r["gap_days"] = (day - prev[1]).days if prev else None
+        last[key] = (r["nth"], day)
+
+
 def extract_sheet_rows(xlsx_path: str) -> list[dict]:
     """シート全行から performance データを抽出。"""
     wb = openpyxl.load_workbook(xlsx_path, data_only=True)
     ws = wb[wb.sheetnames[0]]
 
     rows: list[dict] = []
-    skipped = 0
     for row_idx in range(DATA_START_ROW, ws.max_row + 1):
         date_v = ws.cell(row=row_idx, column=COL_DATE).value
         title_v = ws.cell(row=row_idx, column=COL_TITLE).value
@@ -94,15 +111,10 @@ def extract_sheet_rows(xlsx_path: str) -> list[dict]:
 
         url_cell = ws.cell(row=row_idx, column=COL_URL)
         href = url_cell.hyperlink.target if url_cell.hyperlink else None
-        if not href:
-            skipped += 1
-            continue
-        m = URL_RE.search(href)
-        if not m:
-            skipped += 1
-            continue
-        video_id = m.group(1)
-        start_seconds = int(m.group(2)) if m.group(2) else 0
+        m = URL_RE.search(href) if href else None
+        # リンクの無い行（メンバー限定など）も歌唱履歴には数えるので、ここでは捨てない
+        video_id = m.group(1) if m else None
+        start_seconds = int(m.group(2)) if m and m.group(2) else 0
 
         artist_v = ws.cell(row=row_idx, column=COL_ARTIST).value
         mode_v = ws.cell(row=row_idx, column=COL_MODE).value
@@ -122,9 +134,13 @@ def extract_sheet_rows(xlsx_path: str) -> list[dict]:
             "video_title_text": str(url_cell.value or "").strip(),
         })
 
+    annotate_history(rows)
+    linked = [r for r in rows if r["video_id"]]
+    skipped = len(rows) - len(linked)
+
     if skipped:
-        print(f"WARN: ハイパーリンク無し/パース失敗で {skipped} 行スキップ", file=sys.stderr)
-    return rows
+        print(f"WARN: ハイパーリンク無し/パース失敗で {skipped} 行スキップ（歌唱履歴には計上）", file=sys.stderr)
+    return linked
 
 
 def _song_num(song_id: str) -> int:
@@ -303,6 +319,8 @@ def build(xlsx_path: str) -> None:
             "end_seconds": 0,
             "published_at": published_at,
             "style": r["style"],
+            "nth": r["nth"],
+            "gap_days": "" if r["gap_days"] is None else r["gap_days"],
         })
 
     fill_end_seconds(perfs)
@@ -329,7 +347,7 @@ def build(xlsx_path: str) -> None:
             "performance_id", "song_id", "video_id",
             "start_seconds", "end_seconds", "published_at",
             # 列追加は旧版アプリとも互換（末尾に足す）
-            "style",
+            "style", "nth", "gap_days",
         ])
         w.writeheader()
         w.writerows(perfs)

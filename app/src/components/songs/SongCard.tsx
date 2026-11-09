@@ -11,10 +11,12 @@ import FavoriteIcon from "@mui/icons-material/Favorite";
 import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import PlaylistAddIcon from "@mui/icons-material/PlaylistAdd";
+import QueueMusicIcon from "@mui/icons-material/QueueMusic";
+import { useNavigate } from "react-router-dom";
 import { usePlayerStore } from "../../stores/playerStore";
 import { useLibraryStore } from "../../stores/libraryStore";
 import AddToPlaylistDialog from "../playlist/AddToPlaylistDialog";
-import { STYLE_LABEL, STYLE_MARK } from "../../data/performanceStyle";
+import { performanceBadge, STYLE_LABEL, STYLE_MARK } from "../../data/performanceStyle";
 import { formatJstDate } from "../../data/jstDate";
 import { CARD_THUMBNAIL_WIDTH } from "./cardGrid";
 import type { CardVariant } from "./cardGrid";
@@ -32,6 +34,7 @@ function SongCard({ song, queue, variant = "horizontal" }: Props) {
   const isFavorite = useLibraryStore((s) => s.favoriteIds.includes(song.performanceId));
   const toggleFavorite = useLibraryStore((s) => s.toggleFavorite);
 
+  const navigate = useNavigate();
   const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null);
   const [playlistDialogOpen, setPlaylistDialogOpen] = useState(false);
 
@@ -39,6 +42,7 @@ function SongCard({ song, queue, variant = "horizontal" }: Props) {
   const date = formatJstDate(song.publishedAt);
   const secondary = [song.artist, date].filter(Boolean).join(" ・ ");
   const style = song.style;
+  const badge = performanceBadge(song);
 
   function handleMenuOpen(e: React.MouseEvent<HTMLElement>): void {
     e.stopPropagation();
@@ -52,6 +56,11 @@ function SongCard({ song, queue, variant = "horizontal" }: Props) {
   function handleToggleFavorite(): void {
     toggleFavorite(song.performanceId);
     handleMenuClose();
+  }
+
+  function handleOpenSongPage(): void {
+    handleMenuClose();
+    navigate(`/song/${song.songId}`);
   }
 
   function handleAddToPlaylist(): void {
@@ -94,9 +103,27 @@ function SongCard({ song, queue, variant = "horizontal" }: Props) {
         />
         {/* minWidth:0 がないと flex 子要素が縮まず noWrap の省略が効かない */}
         <Box sx={isVertical ? { mt: 0.5, minWidth: 0 } : { minWidth: 0, flex: 1 }}>
-          <Typography variant="body2" noWrap>
-            {song.title}
-          </Typography>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 0.75, minWidth: 0 }}>
+            <Typography variant="body2" noWrap>
+              {song.title}
+            </Typography>
+            {badge && (
+              <Typography
+                variant="caption"
+                sx={{
+                  flexShrink: 0,
+                  px: 0.75,
+                  borderRadius: 1,
+                  lineHeight: 1.6,
+                  fontWeight: 600,
+                  color: "secondary.contrastText",
+                  bgcolor: "secondary.main",
+                }}
+              >
+                {badge}
+              </Typography>
+            )}
+          </Box>
           {(secondary || style) && (
             <Typography variant="caption" color="text.secondary" noWrap display="block">
               {/* 演奏スタイルの記号は読み上げ用に名前を付ける（🎸 → 弾き語り） */}
@@ -146,6 +173,12 @@ function SongCard({ song, queue, variant = "horizontal" }: Props) {
               <PlaylistAddIcon />
             </ListItemIcon>
             <ListItemText>プレイリストに追加</ListItemText>
+          </MenuItem>
+          <MenuItem onClick={handleOpenSongPage}>
+            <ListItemIcon>
+              <QueueMusicIcon />
+            </ListItemIcon>
+            <ListItemText>この曲の歌唱一覧</ListItemText>
           </MenuItem>
         </Menu>
       )}

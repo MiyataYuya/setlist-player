@@ -11,12 +11,16 @@ const mockSongs: SongPerformance[] = [
     videoId: "v1", startSeconds: 0, endSeconds: 300, publishedAt: "2024-01-15T19:00:00Z",
     thumbnailUrl: "https://img.youtube.com/vi/v1/mqdefault.jpg",
     style: "guitar",
+    nth: null,
+    gapDays: null,
   },
   {
     performanceId: "p2", songId: "s2", title: "Song2", artist: "Artist2",
     videoId: "v1", startSeconds: 310, endSeconds: 600, publishedAt: "2024-01-15T19:00:00Z",
     thumbnailUrl: "https://img.youtube.com/vi/v1/mqdefault.jpg",
     style: "guitar",
+    nth: null,
+    gapDays: null,
   },
 ];
 

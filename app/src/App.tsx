@@ -9,6 +9,7 @@ import SearchPage from "./pages/SearchPage";
 import LibraryPage from "./pages/LibraryPage";
 import PlayerBody from "./components/player/PlayerBody";
 import PlaylistPage from "./pages/PlaylistPage";
+import SongPage from "./pages/SongPage";
 import YouTubeEmbed from "./components/player/YouTubeEmbed";
 import { useCurrentSong, usePlayerStore } from "./stores/playerStore";
 import { useIsDesktop } from "./hooks/useIsDesktop";
@@ -118,6 +119,7 @@ function AppContent() {
             <Route path="/search" element={<SearchPage />} />
             <Route path="/library" element={<LibraryPage />} />
             <Route path="/playlist/:id" element={<PlaylistPage />} />
+            <Route path="/song/:songId" element={<SongPage />} />
           </Routes>
         </FadeRoutes>
       </Box>

@@ -20,6 +20,10 @@ export interface Performance {
   publishedAt: string;
   /** 分類なし（旧CSV・対応外の記号）は null */
   style: PerformanceStyle | null;
+  /** その曲の何回目の歌唱か（1=初披露）。履歴列の無い旧CSVでは null */
+  nth: number | null;
+  /** 同じ曲の前回の歌唱からの日数。初披露・旧CSVでは null */
+  gapDays: number | null;
 }
 
 export interface Video {
@@ -59,6 +63,10 @@ export interface SongPerformance {
   publishedAt: string;
   thumbnailUrl: string;
   style: PerformanceStyle | null;
+  /** その曲の何回目の歌唱か（1=初披露）。履歴列の無い旧CSVでは null */
+  nth: number | null;
+  /** 同じ曲の前回の歌唱からの日数。初披露・旧CSVでは null */
+  gapDays: number | null;
 }
 
 /** 起動時に取得したCSVから組み立てる、アプリ全体の曲データ */
@@ -68,6 +76,8 @@ export interface Catalog {
   videos: Video[];
   songPerformances: SongPerformance[];
   songPerformanceById: Map<string, SongPerformance>;
+  /** songId → その曲の全演奏（配信日時降順） */
+  songPerformancesBySongId: Map<string, SongPerformance[]>;
   /** 配信日時降順 */
   streams: Stream[];
   /** JSTの `YYYY-MM-DD` → その日の配信（同日内は開始が早い順） */

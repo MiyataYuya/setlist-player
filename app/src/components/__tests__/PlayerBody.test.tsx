@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { renderWithProviders, screen, userEvent } from "../../test/helpers";
+import { renderWithProviders, renderWithRoute, screen, userEvent } from "../../test/helpers";
+import LocationDisplay from "../../test/LocationDisplay";
 import PlayerBody from "../player/PlayerBody";
 import { usePlayerStore } from "../../stores/playerStore";
 import { testCatalog } from "../../test/catalogFixture";
@@ -42,5 +43,39 @@ describe("PlayerBody", () => {
     await user.click(screen.getByTestId("player-close"));
     expect(backSpy).toHaveBeenCalledOnce();
     backSpy.mockRestore();
+  });
+
+  // 曲名から曲ページへ。モバイルの全面表示は閉じて遷移先を見せる
+  it("opens the song page from the title and closes the overlay", async () => {
+    const user = userEvent.setup();
+    usePlayerStore.setState({ isPlayerOpen: true });
+    renderWithProviders(
+      <>
+        <PlayerBody variant="overlay" />
+        <LocationDisplay />
+      </>
+    );
+    await user.click(screen.getByRole("link", { name: sample.title }));
+    expect(screen.getByTestId("pathname")).toHaveTextContent(`/song/${sample.songId}`);
+    expect(usePlayerStore.getState().isPlayerOpen).toBe(false);
+  });
+
+  // すでにその曲ページにいるなら遷移せず、閉じるボタンと同じく履歴を戻して閉じる
+  // （同じページへの遷移を履歴に積まない）
+  it("just closes the overlay when already on that song page", async () => {
+    const user = userEvent.setup();
+    const back = vi.spyOn(window.history, "back").mockImplementation(() => {});
+    usePlayerStore.setState({ isPlayerOpen: true });
+    renderWithRoute(
+      <>
+        <PlayerBody variant="overlay" />
+        <LocationDisplay />
+      </>,
+      [`/song/${sample.songId}`]
+    );
+    await user.click(screen.getByRole("link", { name: sample.title }));
+    expect(back).toHaveBeenCalledTimes(1);
+    expect(screen.getByTestId("pathname")).toHaveTextContent(`/song/${sample.songId}`);
+    back.mockRestore();
   });
 });

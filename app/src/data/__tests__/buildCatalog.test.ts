@@ -108,4 +108,18 @@ describe("buildCatalog", () => {
     });
     expect(c.streams[0].styles).toEqual([]);
   });
+
+  // 曲（songId）ごとの全演奏。曲ページで使う
+  it("groups performances by song, newest first", () => {
+    expect(
+      catalog.songPerformancesBySongId.get("s1")?.map((s) => s.performanceId)
+    ).toEqual(["p4", "p1"]);
+    expect(catalog.songPerformancesBySongId.get("nope")).toBeUndefined();
+  });
+
+  // 歌唱履歴を曲に引き継ぐ
+  it("carries the singing history onto song performances", () => {
+    const p4 = catalog.songPerformanceById.get("p4");
+    expect([p4?.nth, p4?.gapDays]).toEqual([2, 26]);
+  });
 });

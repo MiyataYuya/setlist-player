@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { renderWithProviders, screen, userEvent } from "../../test/helpers";
 import SongCard from "../songs/SongCard";
+import LocationDisplay from "../../test/LocationDisplay";
 import { usePlayerStore } from "../../stores/playerStore";
 import { useLibraryStore } from "../../stores/libraryStore";
 import type { SongPerformance } from "../../data/types";
@@ -16,6 +17,8 @@ const song: SongPerformance = {
   publishedAt: "2024-01-15T19:00:00Z",
   thumbnailUrl: "https://img.youtube.com/vi/v1/mqdefault.jpg",
   style: "guitar",
+  nth: 2,
+  gapDays: 10,
 };
 
 const songNoArtist: SongPerformance = {
@@ -113,5 +116,39 @@ describe("SongCard", () => {
   it("shows no style mark when the style is unknown", () => {
     renderWithProviders(<SongCard song={{ ...song, style: null }} queue={queue} />);
     expect(screen.queryByRole("img", { name: /弾き語り|歌枠/ })).not.toBeInTheDocument();
+  });
+
+  // ⋮ メニューから曲ページ（同じ曲の歌唱一覧）へ
+  it("opens the song page from the menu", async () => {
+    const user = userEvent.setup();
+    renderWithProviders(
+      <>
+        <SongCard song={song} queue={queue} />
+        <LocationDisplay />
+      </>
+    );
+    await user.click(screen.getByTestId("MoreVertIcon"));
+    await user.click(screen.getByRole("menuitem", { name: "この曲の歌唱一覧" }));
+    expect(screen.getByTestId("pathname")).toHaveTextContent("/song/s1");
+  });
+
+  // 初披露・久しぶりのマーク
+  it("labels the first performance as 初披露", () => {
+    renderWithProviders(
+      <SongCard song={{ ...song, nth: 1, gapDays: null }} queue={queue} />
+    );
+    expect(screen.getByText("初披露")).toBeInTheDocument();
+  });
+
+  it("labels a long-awaited performance", () => {
+    renderWithProviders(
+      <SongCard song={{ ...song, nth: 4, gapDays: 213 }} queue={queue} />
+    );
+    expect(screen.getByText("7か月ぶり")).toBeInTheDocument();
+  });
+
+  it("adds no label to an ordinary repeat", () => {
+    renderWithProviders(<SongCard song={song} queue={queue} />);
+    expect(screen.queryByText(/初披露|か月ぶり/)).not.toBeInTheDocument();
   });
 });

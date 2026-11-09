@@ -29,6 +29,8 @@ function makeSong(id: string, videoId: string, startSeconds: number): SongPerfor
     publishedAt: "2024-01-01T00:00:00Z",
     thumbnailUrl: `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`,
     style: null,
+    nth: null,
+    gapDays: null,
   };
 }
 

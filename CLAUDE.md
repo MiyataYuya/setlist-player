@@ -111,7 +111,7 @@ CSVファイル → Viteプラグイン（dev配信 / build時に `dist/data/` �
 
 ### ルーティング (React Router v7)
 
-ルートは5つ: `/` (Home), `/calendar`, `/search`, `/library`, `/playlist/:id` (`App.tsx`)。ナビ項目は `components/layout/navItems.tsx` の `NAV_ITEMS` 一箇所で定義し、`BottomNav`/`SideNav` が共用する
+ルートは6つ: `/` (Home), `/calendar`, `/search`, `/library`, `/playlist/:id`, `/song/:songId`（曲ごとの歌唱一覧。曲カードの ⋮ と再生画面の曲名から開く） (`App.tsx`)。ナビ項目は `components/layout/navItems.tsx` の `NAV_ITEMS` 一箇所で定義し、`BottomNav`/`SideNav` が共用する
 
 再生画面の中身は `PlayerBody`（`variant: "overlay" | "panel"`）。**ルートではない**。モバイルでは `playerStore.isPlayerOpen` で制御するフルスクリーンオーバーレイ（`translateY` でスライド、`variant="overlay"`）、PCでは右カラムに常設（`variant="panel"`）。
 

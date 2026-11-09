@@ -1,4 +1,4 @@
-from build_from_sheet import _song_num, extract_sheet_rows, load_song_registry, parse_style
+from build_from_sheet import _song_num, annotate_history, extract_sheet_rows, load_song_registry, parse_style
 
 
 def test_song_num_parses_zero_padded():
@@ -116,7 +116,8 @@ def _write_sheet(path, rows):
         ws.cell(row=r, column=COL_ARTIST, value="アーティスト")
         ws.cell(row=r, column=COL_MODE, value=mode)
         cell = ws.cell(row=r, column=COL_URL, value="配信タイトル")
-        cell.hyperlink = url
+        if url:
+            cell.hyperlink = url
     wb.save(path)
 
 
@@ -128,3 +129,72 @@ def test_extract_sheet_rows_reads_style_per_row(tmp_path):
     ])
     rows = extract_sheet_rows(str(path))
     assert [r["style"] for r in rows] == ["guitar", "karaoke"]
+
+
+# --- 歌唱履歴（何回目か・前回からの間隔）---
+
+def _hist(title, date, no=1, artist="A"):
+    return {"title": title, "artist": artist, "date": date, "no": no}
+
+
+def test_annotate_history_numbers_each_song_in_date_order():
+    rows = [
+        _hist("曲A", "2026-03-01 20:00:00"),
+        _hist("曲A", "2026-01-01 20:00:00"),
+        _hist("曲B", "2026-02-01 20:00:00"),
+    ]
+    annotate_history(rows)
+    by = {(r["title"], r["date"][:10]): r for r in rows}
+    assert by[("曲A", "2026-01-01")]["nth"] == 1
+    assert by[("曲A", "2026-03-01")]["nth"] == 2
+    assert by[("曲B", "2026-02-01")]["nth"] == 1
+
+
+def test_annotate_history_gap_days_since_previous_performance():
+    rows = [
+        _hist("曲A", "2026-01-01 20:00:00"),
+        _hist("曲A", "2026-03-02 23:30:00"),
+    ]
+    annotate_history(rows)
+    assert rows[0]["gap_days"] is None
+    assert rows[1]["gap_days"] == 60
+
+
+def test_annotate_history_orders_same_day_by_setlist_number():
+    rows = [
+        _hist("曲A", "2026-01-01 20:00:00", no=5),
+        _hist("曲A", "2026-01-01 20:00:00", no=2),
+    ]
+    annotate_history(rows)
+    assert [r["nth"] for r in rows] == [2, 1]
+    assert rows[0]["gap_days"] == 0
+
+
+def test_annotate_history_treats_artist_as_part_of_the_song():
+    rows = [
+        _hist("同名曲", "2026-01-01 20:00:00", artist="X"),
+        _hist("同名曲", "2026-02-01 20:00:00", artist="Y"),
+    ]
+    annotate_history(rows)
+    assert [r["nth"] for r in rows] == [1, 1]
+
+
+def test_extract_sheet_rows_counts_rows_without_a_link_in_history(tmp_path):
+    # リンクの無い行（メンバー限定など）は出力しないが、回数・間隔には数える
+    path = tmp_path / "sheet.xlsx"
+    _write_sheet(path, [
+        ("曲A", "🎸", "https://www.youtube.com/watch?v=AAAAAAAAAAA&t=10s"),
+        ("曲A", "🔒", None),
+    ])
+    import openpyxl
+    from build_from_sheet import COL_DATE, DATA_START_ROW
+    wb = openpyxl.load_workbook(path)
+    ws = wb.active
+    ws.cell(row=DATA_START_ROW, column=COL_DATE, value="2026-02-01 20:00:00")
+    ws.cell(row=DATA_START_ROW + 1, column=COL_DATE, value="2026-01-01 20:00:00")
+    wb.save(path)
+
+    rows = extract_sheet_rows(str(path))
+    assert len(rows) == 1
+    assert rows[0]["nth"] == 2
+    assert rows[0]["gap_days"] == 31

@@ -18,6 +18,8 @@ interface RawPerformance {
   published_at: string;
   /** 後から追加した列。旧CSVには無い */
   style?: string;
+  nth?: string;
+  gap_days?: string;
 }
 
 interface RawVideo {
@@ -59,6 +61,13 @@ function parseStyle(raw: string | undefined): PerformanceStyle | null {
   return PERFORMANCE_STYLES.find((style) => style === raw) ?? null;
 }
 
+/** 任意の整数列。列が無い・空欄・数でないときは null */
+function parseOptionalInt(raw: string | undefined): number | null {
+  if (raw === undefined || raw.trim() === "") return null;
+  const n = Number(raw);
+  return Number.isInteger(n) ? n : null;
+}
+
 export function parsePerformancesCsv(csv: string): Performance[] {
   return parseRows<RawPerformance>(csv, [
     "performance_id",
@@ -77,6 +86,8 @@ export function parsePerformancesCsv(csv: string): Performance[] {
       endSeconds: Number(r.end_seconds),
       publishedAt: r.published_at,
       style: parseStyle(r.style),
+      nth: parseOptionalInt(r.nth),
+      gapDays: parseOptionalInt(r.gap_days),
     }));
 }
 

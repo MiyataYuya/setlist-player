@@ -2,6 +2,8 @@ import { useState, useRef, useEffect } from "react";
 import Box from "@mui/material/Box";
 import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
+import Link from "@mui/material/Link";
+import { Link as RouterLink, useLocation } from "react-router-dom";
 import List from "@mui/material/List";
 import ListItemButton from "@mui/material/ListItemButton";
 import ListItemText from "@mui/material/ListItemText";
@@ -24,6 +26,8 @@ export default function PlayerBody({ variant }: PlayerBodyProps) {
   const queue = usePlayerStore((s) => s.queue);
   const currentIndex = usePlayerStore((s) => s.currentIndex);
   const playSong = usePlayerStore((s) => s.playSong);
+  const closePlayer = usePlayerStore((s) => s.closePlayer);
+  const location = useLocation();
   const [tagManagerOpen, setTagManagerOpen] = useState(false);
   const currentItemRef = useRef<HTMLDivElement>(null);
 
@@ -49,6 +53,17 @@ export default function PlayerBody({ variant }: PlayerBodyProps) {
   }
 
   const date = formatJstDate(currentSong.publishedAt);
+  const songPath = `/song/${currentSong.songId}`;
+
+  function handleTitleClick(e: React.MouseEvent): void {
+    if (variant === "overlay" && location.pathname === songPath) {
+      // すでにその曲ページにいる。遷移はせず閉じるボタンと同じく履歴を戻して閉じる
+      e.preventDefault();
+      window.history.back();
+      return;
+    }
+    closePlayer();
+  }
 
   return (
     <Box
@@ -84,7 +99,20 @@ export default function PlayerBody({ variant }: PlayerBodyProps) {
         >
           <Box sx={{ minWidth: 0, flex: 1 }}>
             <Typography variant="h6" fontWeight="bold" noWrap lineHeight={1.3}>
-              {currentSong.title}
+              {/* 曲名から同じ曲の歌唱一覧へ。モバイルの全面表示は閉じて遷移先を見せる。
+                  全面表示は開くときに履歴を1つ積んでいる（ブラウザバックで閉じるため）ので、
+                  それを置き換えて遷移する。積んだまま push すると、戻るで同じページを2回通る。
+                  PC では replace を指定しない（同じURLなら React Router が自動で置き換える） */}
+              <Link
+                component={RouterLink}
+                to={songPath}
+                replace={variant === "overlay" ? true : undefined}
+                onClick={handleTitleClick}
+                color="inherit"
+                underline="hover"
+              >
+                {currentSong.title}
+              </Link>
             </Typography>
             {currentSong.artist && (
               <Typography variant="body2" color="text.secondary" noWrap sx={{ mt: 0.25 }}>

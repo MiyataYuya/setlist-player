@@ -31,10 +31,22 @@ export function buildCatalog({ songs, performances, videos }: CatalogSource): Ca
       publishedAt: p.publishedAt,
       thumbnailUrl: thumbnailUrl(p.videoId),
       style: p.style,
+      nth: p.nth,
+      gapDays: p.gapDays,
     };
   });
 
   const songPerformanceById = new Map(songPerformances.map((sp) => [sp.performanceId, sp]));
+
+  const songPerformancesBySongId = new Map<string, SongPerformance[]>();
+  for (const sp of songPerformances) {
+    const list = songPerformancesBySongId.get(sp.songId) ?? [];
+    list.push(sp);
+    songPerformancesBySongId.set(sp.songId, list);
+  }
+  for (const list of songPerformancesBySongId.values()) {
+    list.sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
+  }
 
   const byVideo = new Map<string, SongPerformance[]>();
   for (const sp of songPerformances) {
@@ -78,6 +90,7 @@ export function buildCatalog({ songs, performances, videos }: CatalogSource): Ca
     videos,
     songPerformances,
     songPerformanceById,
+    songPerformancesBySongId,
     streams,
     streamsByDate,
     streamDateKeys,

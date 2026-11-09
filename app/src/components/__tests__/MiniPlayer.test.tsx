@@ -9,6 +9,8 @@ const song: SongPerformance = {
   videoId: "v1", startSeconds: 0, endSeconds: 300, publishedAt: "2024-01-01T00:00:00Z",
   thumbnailUrl: "https://img.youtube.com/vi/v1/mqdefault.jpg",
   style: null,
+  nth: null,
+  gapDays: null,
 };
 
 describe("MiniPlayer", () => {

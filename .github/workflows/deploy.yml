@@ -14,11 +14,11 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build-and-deploy:
+  # ビルドとデプロイはジョブを分ける（GitHub 公式スターターと同じ構成）。
+  # 同一ジョブ内だとアップロード直後に deploy-pages が成果物一覧を引き、
+  # 反映前で「0件」となって失敗することがある。ジョブ境界を挟めば成果物は確定済み。
+  build:
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v6
 
@@ -42,5 +42,12 @@ jobs:
         with:
           path: app/dist
 
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
       - id: deployment
         uses: actions/deploy-pages@v5
